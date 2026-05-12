@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -172,9 +173,9 @@ header {
 }
 
 .watermark {
-  position: absolute; bottom: 3%; left: 6%;
-  font-size: 6px; letter-spacing: 0.18em; opacity: 0.2;
-  font-family: 'DM Sans', sans-serif;
+  position: absolute; bottom: 4%; right: 6%;
+  font-size: 9px; letter-spacing: 0.2em; opacity: 0.3;
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
 }
 
 /* LOCKED overlay on canvas for free users */
@@ -836,12 +837,33 @@ function activatePro() {
 function exportImage() {
   if (!hasPhoto) { showToast('まず写真を選んでね'); return; }
   const btn = document.getElementById('exportBtn');
-  btn.textContent = 'Exporting…';
-  setTimeout(() => {
+  const restoreBtn = () => {
     btn.innerHTML = 'Export PNG<span class="free-note">' + (isPro ? 'high-res · no watermark' : 'free version includes tono. watermark') + '</span>';
+    btn.disabled = false;
+  };
+  btn.textContent = 'Exporting…';
+  btn.disabled = true;
+
+  html2canvas(storyCanvas, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: null,
+    logging: false
+  }).then(canvas => {
+    const dataURL = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = 'tono-story.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    restoreBtn();
     showToast(isPro ? 'exported!' : 'exported with watermark');
-    // 本番: html2canvas(storyCanvas).then(c => c.toBlob(b => { const url = URL.createObjectURL(b); ... }))
-  }, 600);
+  }).catch(() => {
+    restoreBtn();
+    showToast('エクスポートに失敗しました');
+  });
 }
 
 function showToast(msg) {
