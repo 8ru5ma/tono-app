@@ -267,21 +267,57 @@ header {
 
 /* PHOTO TAB */
 .drop-zone {
-  aspect-ratio: 16/9;
-  border: 1.5px dashed var(--accent);
+  min-height: 52px;
+  border: 1px solid rgba(0,0,0,0.10);
   border-radius: 4px;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   cursor: pointer; position: relative; overflow: hidden;
   transition: all 0.2s;
-  background: rgba(200,184,154,0.04);
-  min-height: 100px;
+  background: rgba(255,255,255,0.20);
+  padding: 8px;
 }
-.drop-zone:active { transform: scale(0.98); }
-.drop-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.drop-zone:active { transform: scale(0.99); }
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(200,184,154,0.08);
+}
 .drop-zone input { display: none; }
-.dz-text { font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
-.dz-sub { font-size: 10px; color: var(--muted); opacity: 0.5; margin-top: 4px; }
+.choose-photo-btn {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 3px;
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--sys);
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.photo-file-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.photo-file-name {
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.photo-file-hint {
+  font-size: 9px;
+  color: var(--muted);
+  opacity: 0.65;
+  letter-spacing: 0.06em;
+}
+.desktop-drop-hint { display: none; }
 
 .panel-label {
   font-size: 10px; letter-spacing: 0.12em;
@@ -610,6 +646,13 @@ input[type=range]::-webkit-slider-thumb {
     height: auto; padding: 14px;
     display: block;
   }
+
+  .drop-zone {
+    border-style: dashed;
+    background: rgba(200,184,154,0.04);
+  }
+
+  .desktop-drop-hint { display: inline; }
 
   /* ボトムシートラッパーを無効化: 子要素を app-shell の直接の子として扱う */
   .bottom-sheet {
@@ -953,9 +996,12 @@ input[type=range]::-webkit-slider-thumb {
     <!-- PHOTO TAB -->
     <div class="tab-panel active" id="tab-photo">
       <div class="drop-zone" id="dropZone">
-        <input type="file" id="fileInput" accept="image/*">
-        <div class="dz-text">tap to choose photo</div>
-        <div class="dz-sub">or drag & drop</div>
+        <input type="file" id="fileInput" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif">
+        <button class="choose-photo-btn" id="choosePhotoBtn" type="button">choose photo</button>
+        <div class="photo-file-meta">
+          <div class="photo-file-name" id="photoFileName">No photo selected</div>
+          <div class="photo-file-hint">tap to replace<span class="desktop-drop-hint"> · or drop image here</span></div>
+        </div>
       </div>
 
       <p class="panel-label">Background</p>
@@ -1194,6 +1240,8 @@ const canvasPhoto = document.getElementById('canvasPhoto');
 const noPhoto = document.getElementById('noPhoto');
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
+const choosePhotoBtn = document.getElementById('choosePhotoBtn');
+const photoFileName = document.getElementById('photoFileName');
 const paletteRow = document.getElementById('paletteRow');
 const toneSlider = document.getElementById('toneSlider');
 const fadeSlider = document.getElementById('fadeSlider');
@@ -1215,15 +1263,34 @@ function switchTab(name, el) {
 
 // ── PHOTO ──
 dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', e => { e.preventDefault(); });
-dropZone.addEventListener('drop', e => {
+choosePhotoBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  fileInput.click();
+});
+dropZone.addEventListener('dragover', e => {
+  if (!window.matchMedia('(min-width: 768px)').matches) return;
   e.preventDefault();
+  dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  if (!window.matchMedia('(min-width: 768px)').matches) return;
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
-  if (file?.type.startsWith('image/')) loadImage(file);
+  if (isImageFile(file)) loadImage(file);
 });
 fileInput.addEventListener('change', e => {
-  if (e.target.files[0]) loadImage(e.target.files[0]);
+  const file = e.target.files[0];
+  if (isImageFile(file)) loadImage(file);
 });
+
+function isImageFile(file) {
+  return !!file && (
+    file.type.startsWith('image/') ||
+    /\.(jpe?g|png|gif|webp|heic|heif|avif)$/i.test(file.name || '')
+  );
+}
 
 function loadImage(file) {
   const reader = new FileReader();
@@ -1232,7 +1299,7 @@ function loadImage(file) {
     canvasPhoto.src = src;
     canvasPhoto.style.display = 'block';
     noPhoto.style.display = 'none';
-    dropZone.innerHTML = `<img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
+    if (photoFileName) photoFileName.textContent = file.name || 'Selected photo';
     hasPhoto = true;
     photoX = 0; photoY = 0; photoZoom = 1;
     applyPhotoTransform();
