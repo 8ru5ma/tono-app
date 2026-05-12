@@ -109,6 +109,7 @@ header {
   transition: background 0.5s ease;
   background: #1a1814;
   flex-shrink: 0;
+  transform: translateZ(0); /* GPU合成でbox-shadow由来のアーティファクトを防止 */
 }
 
 /* 9:16 canvas sized to fit screen */
@@ -486,6 +487,170 @@ input[type=range]::-webkit-slider-thumb {
   .story-canvas { width: 320px; height: 569px; }
 }
 
+/* ── BACKGROUND SWATCHES ── */
+.bg-swatch {
+  width: 28px; height: 28px; border-radius: 50%;
+  cursor: pointer; border: 2px solid transparent;
+  transition: all 0.2s; flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+}
+.bg-swatch.active {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text), inset 0 0 0 1px rgba(0,0,0,0.1);
+}
+.from-photo-label {
+  font-size: 9px; letter-spacing: 0.14em;
+  color: var(--muted); margin: 10px 0 6px; display: block;
+}
+
+/* ── FIT TOGGLE ── */
+.fit-toggle { display: flex; gap: 6px; }
+.fit-btn {
+  flex: 1; padding: 7px 0; font-size: 10px; letter-spacing: 0.1em;
+  border: 1px solid rgba(0,0,0,0.12); border-radius: 2px;
+  background: transparent; cursor: pointer; color: var(--muted);
+  transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  text-transform: uppercase;
+}
+.fit-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* ── PALETTE LAYOUT ── */
+.story-canvas.layout-palette .photo-frame {
+  position: absolute; top: 0; left: 0; right: 0; height: 75%;
+  border-radius: 0; overflow: hidden; transform: none;
+}
+.story-canvas.layout-palette .story-text { bottom: 28%; }
+.story-canvas.layout-palette .deco-line { display: none; }
+.story-canvas.layout-palette .watermark { bottom: 27%; }
+.palette-strip {
+  display: none;
+  position: absolute; bottom: 0; left: 0; right: 0; height: 25%;
+}
+.story-canvas.layout-palette .palette-strip { display: flex; }
+.palette-strip .p-cell { flex: 1; }
+
+/* ── PALETTE LAYOUT THUMB ── */
+.t-pal .lt-photo { top: 0; left: 0; right: 0; height: 72%; border-radius: 0; }
+.lt-pal-strip { position: absolute; bottom: 0; left: 0; right: 0; height: 26%; display: flex; }
+.lt-pal-strip span { flex: 1; }
+
+/* ── PHOTO POSITION / ZOOM ── */
+#photoFrame { cursor: grab; }
+#photoFrame:active { cursor: grabbing; }
+.reset-pos-btn {
+  padding: 7px 16px; font-size: 10px; letter-spacing: 0.1em;
+  border: 1px solid rgba(0,0,0,0.12); border-radius: 2px;
+  background: transparent; cursor: pointer; color: var(--muted);
+  transition: opacity 0.2s; font-family: 'DM Sans', sans-serif;
+  text-transform: uppercase;
+}
+.reset-pos-btn:active { opacity: 0.5; }
+
+/* ── NEW LAYOUTS ── */
+.story-canvas.layout-split .photo-frame {
+  position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  border-radius: 0; overflow: hidden;
+}
+.story-canvas.layout-split .story-text { top: 54%; }
+
+.story-canvas.layout-frame .photo-frame {
+  position: absolute; top: 6%; left: 8%; right: 8%; height: 70%;
+  border-radius: 3px; overflow: hidden;
+}
+.story-canvas.layout-frame .story-text { bottom: 3%; }
+
+.story-canvas.layout-duo .photo-frame {
+  position: absolute; top: 0; left: 0; width: 60%; height: 100%;
+  border-radius: 0; overflow: hidden;
+}
+.story-canvas.layout-duo .story-text {
+  left: 63%; right: 3%; top: 22%; bottom: auto;
+  writing-mode: vertical-rl;
+}
+.story-canvas.layout-duo .deco-line { display: none; }
+.story-canvas.layout-duo .watermark { right: auto; left: 4%; bottom: 4%; }
+
+/* split thumbnail */
+.t-spl .lt-photo { top: 0; left: 0; right: 0; height: 50%; border-radius: 0; }
+.t-spl .lt-line  { top: 58%; left: 8%; right: 30%; }
+/* frame thumbnail */
+.t-frm .lt-photo { top: 8%; left: 10%; right: 10%; height: 62%; border-radius: 2px; }
+.t-frm .lt-line  { bottom: 10%; left: 10%; right: 30%; }
+/* duo thumbnail */
+.t-duo .lt-photo { top: 0; left: 0; width: 58%; height: 100%; border-radius: 0; }
+
+/* ── SELVEDGE LAYOUTS ── */
+.story-canvas.layout-selvedge-h .photo-frame {
+  position: absolute; top: 0; left: 0; right: 0; height: 80%;
+  border-radius: 0; overflow: hidden;
+}
+.story-canvas.layout-selvedge-h .story-text,
+.story-canvas.layout-selvedge-h .deco-line,
+.story-canvas.layout-selvedge-h .watermark { display: none; }
+
+.story-canvas.layout-selvedge-v .photo-frame {
+  position: absolute; top: 0; right: 0; width: 80%; height: 100%;
+  border-radius: 0; overflow: hidden;
+}
+.story-canvas.layout-selvedge-v .story-text,
+.story-canvas.layout-selvedge-v .deco-line,
+.story-canvas.layout-selvedge-v .watermark { display: none; }
+
+/* Horizontal band（下20%）*/
+.selvedge-band-h {
+  display: none;
+  position: absolute; bottom: 0; left: 0; right: 0; height: 20%;
+  flex-direction: column; justify-content: space-evenly;
+  padding: 0 6%;
+}
+.story-canvas.layout-selvedge-h .selvedge-band-h { display: flex; }
+
+/* Vertical band（左20%）*/
+.selvedge-band-v {
+  display: none;
+  position: absolute; top: 0; left: 0; bottom: 0; width: 20%;
+  flex-direction: column; align-items: center;
+  padding: 8% 0 6%;
+}
+.story-canvas.layout-selvedge-v .selvedge-band-v { display: flex; }
+
+/* ドット共通 — サイズはJSがpxで設定する */
+.s-dot { border-radius: 50%; flex-shrink: 0; }
+.s-dots-h { display: flex; flex-direction: row; align-items: center; justify-content: flex-end; gap: 5%; width: 100%; }
+.s-dots-v { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+/* バンドテキスト */
+.s-meta-h { display: flex; align-items: center; justify-content: space-between; }
+.s-brand-h {
+  font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
+  font-size: 7px; letter-spacing: 0.14em;
+}
+.s-date-h {
+  font-family: 'DM Sans', sans-serif; font-weight: 300;
+  font-size: 6px; letter-spacing: 0.1em; opacity: 0.6;
+}
+.s-brand-v {
+  font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
+  font-size: 7px; letter-spacing: 0.24em;
+  writing-mode: vertical-rl; margin-top: auto; opacity: 0.72;
+}
+
+/* Selvedge サムネイル */
+.t-svh .lt-photo { top: 0; left: 0; right: 0; height: 78%; border-radius: 0; }
+.lt-svh-band {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 20%;
+  display: flex; flex-direction: row; align-items: center;
+  padding: 0 6%; gap: 8%;
+}
+.lt-svh-band span { height: 44%; aspect-ratio: 1; border-radius: 50%; flex-shrink: 0; }
+
+.t-svv .lt-photo { top: 0; right: 0; width: 78%; height: 100%; border-radius: 0; }
+.lt-svv-band {
+  position: absolute; top: 0; left: 0; bottom: 0; width: 20%;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8% 0; gap: 8%;
+}
+.lt-svv-band span { width: 54%; aspect-ratio: 1; border-radius: 50%; flex-shrink: 0; }
+
 /* TOAST */
 .toast {
   position: fixed; bottom: 32px; left: 50%;
@@ -529,6 +694,26 @@ input[type=range]::-webkit-slider-thumb {
       </div>
       <div class="deco-line" id="decoLine"></div>
       <div class="watermark" id="watermark">tono.</div>
+      <div class="palette-strip" id="paletteStrip">
+        <div class="p-cell" style="background:rgba(255,255,255,0.04)"></div>
+        <div class="p-cell" style="background:rgba(255,255,255,0.05)"></div>
+        <div class="p-cell" style="background:rgba(255,255,255,0.07)"></div>
+        <div class="p-cell" style="background:rgba(255,255,255,0.09)"></div>
+        <div class="p-cell" style="background:rgba(255,255,255,0.06)"></div>
+        <div class="p-cell" style="background:rgba(255,255,255,0.04)"></div>
+      </div>
+      <!-- selvedge bands -->
+      <div class="selvedge-band-h" id="selvedgeBandH">
+        <div class="s-dots-h" id="selvedgeDotsH"></div>
+        <div class="s-meta-h">
+          <span class="s-brand-h">tono.</span>
+          <span class="s-date-h" id="selvedgeDateH">— 2026</span>
+        </div>
+      </div>
+      <div class="selvedge-band-v" id="selvedgeBandV">
+        <div class="s-dots-v" id="selvedgeDotsV"></div>
+        <div class="s-brand-v">tono.</div>
+      </div>
       <!-- pro lock overlay for locked layouts -->
       <div class="pro-lock-overlay" id="lockOverlay">
         <div class="lock-icon">○</div>
@@ -554,13 +739,24 @@ input[type=range]::-webkit-slider-thumb {
         <div class="dz-sub">or drag & drop</div>
       </div>
 
-      <p class="panel-label">Extracted palette</p>
-      <div class="palette-row" id="paletteRow">
-        <div class="swatch-ph"></div>
-        <div class="swatch-ph"></div>
-        <div class="swatch-ph"></div>
-        <div class="swatch-ph"></div>
+      <p class="panel-label">Background</p>
+      <div class="palette-row" id="bgBasePalette"></div>
+      <span class="from-photo-label" id="fromPhotoLabel" style="display:none">from photo</span>
+      <div class="palette-row" id="paletteRow"></div>
+
+      <p class="panel-label">Photo fit</p>
+      <div class="fit-toggle" style="margin-bottom:4px">
+        <button class="fit-btn active" onclick="setFitMode('cover',this)">Fill</button>
+        <button class="fit-btn" onclick="setFitMode('contain',this)">Fit</button>
       </div>
+
+      <p class="panel-label">Position &amp; Zoom</p>
+      <div class="slider-group">
+        <div class="slider-row"><span>zoom</span><span id="zoomValue">1.0×</span></div>
+        <input type="range" id="zoomSlider" min="0.5" max="3.0" step="0.05" value="1"
+          oninput="onZoomSlider(this.value)">
+      </div>
+      <button class="reset-pos-btn" onclick="resetPhotoTransform()">reset position</button>
 
       <p class="panel-label">Tone</p>
       <div class="slider-group">
@@ -579,7 +775,6 @@ input[type=range]::-webkit-slider-thumb {
     <div class="tab-panel" id="tab-layout">
       <p class="panel-label">Choose layout</p>
       <div class="layout-grid">
-        <!-- FREE -->
         <div class="layout-thumb t-top active" data-layout="layout-top" data-pro="false" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
           <span class="thumb-name">top</span>
@@ -588,20 +783,65 @@ input[type=range]::-webkit-slider-thumb {
           <div class="lt-photo"></div><div class="lt-line"></div>
           <span class="thumb-name">center</span>
         </div>
-        <!-- PRO -->
-        <div class="layout-thumb t-fil locked" data-layout="layout-film" data-pro="true" onclick="setLayout(this)">
+        <div class="layout-thumb t-fil" data-layout="layout-film" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
           <span class="thumb-name">film</span>
-          <span class="lock-chip">🔒</span>
         </div>
-        <div class="layout-thumb t-edg locked" data-layout="layout-edge" data-pro="true" onclick="setLayout(this)">
+        <div class="layout-thumb t-edg" data-layout="layout-edge" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
           <span class="thumb-name">edge</span>
-          <span class="lock-chip">🔒</span>
+        </div>
+        <div class="layout-thumb t-pal" data-layout="layout-palette" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div>
+          <div class="lt-pal-strip">
+            <span style="background:rgba(210,188,155,0.7)"></span>
+            <span style="background:rgba(180,158,120,0.7)"></span>
+            <span style="background:rgba(148,125,90,0.7)"></span>
+            <span style="background:rgba(118,95,62,0.7)"></span>
+            <span style="background:rgba(85,65,40,0.7)"></span>
+            <span style="background:rgba(55,40,22,0.7)"></span>
+          </div>
+          <span class="thumb-name">palette</span>
+        </div>
+        <div class="layout-thumb t-spl" data-layout="layout-split" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div><div class="lt-line"></div>
+          <span class="thumb-name">split</span>
+        </div>
+        <div class="layout-thumb t-frm" data-layout="layout-frame" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div><div class="lt-line"></div>
+          <span class="thumb-name">frame</span>
+        </div>
+        <div class="layout-thumb t-duo" data-layout="layout-duo" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div>
+          <span class="thumb-name">duo</span>
+        </div>
+        <div class="layout-thumb t-svh" data-layout="layout-selvedge-h" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div>
+          <div class="lt-svh-band">
+            <span style="background:rgba(210,188,155,0.85)"></span>
+            <span style="background:rgba(178,152,112,0.85)"></span>
+            <span style="background:rgba(145,118,80,0.85)"></span>
+            <span style="background:rgba(112,85,52,0.85)"></span>
+            <span style="background:rgba(80,58,32,0.85)"></span>
+            <span style="background:rgba(50,35,18,0.85)"></span>
+          </div>
+          <span class="thumb-name">selvdge</span>
+        </div>
+        <div class="layout-thumb t-svv" data-layout="layout-selvedge-v" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div>
+          <div class="lt-svv-band">
+            <span style="background:rgba(210,188,155,0.85)"></span>
+            <span style="background:rgba(178,152,112,0.85)"></span>
+            <span style="background:rgba(145,118,80,0.85)"></span>
+            <span style="background:rgba(112,85,52,0.85)"></span>
+            <span style="background:rgba(80,58,32,0.85)"></span>
+            <span style="background:rgba(50,35,18,0.85)"></span>
+          </div>
+          <span class="thumb-name">seldg-v</span>
         </div>
       </div>
       <p style="font-size:11px;color:var(--muted);margin-top:16px;letter-spacing:0.04em;line-height:1.6;">
-        Pro unlocks all layouts, removes watermark, and enables high-res export.
+        Pro unlocks film, edge &amp; palette layouts, removes watermark, and enables 1080px export.
       </p>
     </div>
 
@@ -668,10 +908,21 @@ input[type=range]::-webkit-slider-thumb {
 // ── STATE ──
 let isPro = false;
 let extractedColors = [];
-let selectedColor = null;
+let currentBgRgb = [26, 24, 20];
 let hasPhoto = false;
+let photoZoom = 1, photoX = 0, photoY = 0;
+let isDragging = false;
+const dragStart = { x: 0, y: 0, px: 0, py: 0 };
+const touchSt = { dragging: false, pinching: false, initDist: 0, initZoom: 1, sx: 0, sy: 0, spx: 0, spy: 0 };
+
+const BASE_PALETTE = [
+  [255,255,255],[245,242,238],[232,228,222],[200,196,190],
+  [107,104,96],[26,24,20],[44,36,22]
+];
+const SELVEDGE_PLACEHOLDER = [[188,182,172],[168,158,147],[145,135,122],[118,108,95],[90,80,68],[62,54,44]];
 
 const storyCanvas = document.getElementById('storyCanvas');
+const photoFrame  = document.getElementById('photoFrame');
 const canvasPhoto = document.getElementById('canvasPhoto');
 const noPhoto = document.getElementById('noPhoto');
 const dropZone = document.getElementById('dropZone');
@@ -714,9 +965,126 @@ function loadImage(file) {
     noPhoto.style.display = 'none';
     dropZone.innerHTML = `<img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
     hasPhoto = true;
+    photoX = 0; photoY = 0; photoZoom = 1;
+    applyPhotoTransform();
     canvasPhoto.onload = () => { extractColors(canvasPhoto); applyFilter(); };
   };
   reader.readAsDataURL(file);
+}
+
+// ── PHOTO TRANSFORM ──
+function applyPhotoTransform() {
+  canvasPhoto.style.transform = `translate(${photoX}px,${photoY}px) scale(${photoZoom})`;
+  const sl = document.getElementById('zoomSlider');
+  const vl = document.getElementById('zoomValue');
+  if (sl) sl.value = photoZoom;
+  if (vl) vl.textContent = photoZoom.toFixed(1) + '×';
+}
+function resetPhotoTransform() {
+  photoX = 0; photoY = 0; photoZoom = 1;
+  applyPhotoTransform();
+}
+function onZoomSlider(v) {
+  photoZoom = parseFloat(v);
+  applyPhotoTransform();
+}
+
+// Mouse drag
+photoFrame.addEventListener('mousedown', e => {
+  if (!hasPhoto) return;
+  e.preventDefault();
+  isDragging = true;
+  dragStart.x = e.clientX; dragStart.y = e.clientY;
+  dragStart.px = photoX; dragStart.py = photoY;
+  photoFrame.style.cursor = 'grabbing';
+});
+document.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  photoX = dragStart.px + (e.clientX - dragStart.x);
+  photoY = dragStart.py + (e.clientY - dragStart.y);
+  applyPhotoTransform();
+});
+document.addEventListener('mouseup', () => {
+  if (!isDragging) return;
+  isDragging = false;
+  photoFrame.style.cursor = 'grab';
+});
+
+// Wheel zoom
+photoFrame.addEventListener('wheel', e => {
+  if (!hasPhoto) return;
+  e.preventDefault();
+  photoZoom = Math.min(3.0, Math.max(0.5, photoZoom + (e.deltaY < 0 ? 0.1 : -0.1)));
+  applyPhotoTransform();
+}, { passive: false });
+
+// Touch drag + pinch zoom
+photoFrame.addEventListener('touchstart', e => {
+  if (!hasPhoto) return;
+  if (e.touches.length === 1) {
+    touchSt.dragging = true; touchSt.pinching = false;
+    touchSt.sx = e.touches[0].clientX; touchSt.sy = e.touches[0].clientY;
+    touchSt.spx = photoX; touchSt.spy = photoY;
+  } else if (e.touches.length === 2) {
+    touchSt.dragging = false; touchSt.pinching = true;
+    touchSt.initDist = Math.hypot(
+      e.touches[1].clientX - e.touches[0].clientX,
+      e.touches[1].clientY - e.touches[0].clientY
+    );
+    touchSt.initZoom = photoZoom;
+  }
+}, { passive: true });
+document.addEventListener('touchmove', e => {
+  if (touchSt.dragging && e.touches.length === 1) {
+    e.preventDefault();
+    photoX = touchSt.spx + (e.touches[0].clientX - touchSt.sx);
+    photoY = touchSt.spy + (e.touches[0].clientY - touchSt.sy);
+    applyPhotoTransform();
+  } else if (touchSt.pinching && e.touches.length === 2) {
+    e.preventDefault();
+    const d = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+    photoZoom = Math.min(3.0, Math.max(0.5, touchSt.initZoom * d / touchSt.initDist));
+    applyPhotoTransform();
+  }
+}, { passive: false });
+document.addEventListener('touchend', e => {
+  if (e.touches.length < 2) touchSt.pinching = false;
+  if (e.touches.length === 0) { touchSt.dragging = false; }
+  else if (e.touches.length === 1 && !touchSt.pinching) {
+    touchSt.dragging = true;
+    touchSt.sx = e.touches[0].clientX; touchSt.sy = e.touches[0].clientY;
+    touchSt.spx = photoX; touchSt.spy = photoY;
+  }
+});
+
+// ── BACKGROUND ──
+function applyBackground(r, g, b) {
+  currentBgRgb = [r, g, b];
+  storyCanvas.style.background = `rgb(${r},${g},${b})`;
+  const lum = 0.299*r + 0.587*g + 0.114*b;
+  const tc = lum > 140 ? 'rgba(26,24,20,0.85)' : 'rgba(245,242,238,0.85)';
+  storyText.style.color = tc;
+  decoLine.style.background = tc;
+  if (watermark.style.display !== 'none') watermark.style.color = tc;
+  document.querySelectorAll('.bg-swatch').forEach(s => {
+    const [sr,sg,sb] = s.dataset.rgb.split(',').map(Number);
+    s.classList.toggle('active', sr===r && sg===g && sb===b);
+  });
+  // selvedge バンドのテキスト色を同期
+  document.querySelectorAll('.s-brand-h, .s-date-h, .s-brand-v').forEach(el => el.style.color = tc);
+}
+
+function renderBgBasePalette() {
+  const row = document.getElementById('bgBasePalette');
+  BASE_PALETTE.forEach(([r,g,b]) => {
+    const sw = document.createElement('div');
+    sw.className = 'bg-swatch';
+    sw.style.background = `rgb(${r},${g},${b})`;
+    sw.dataset.rgb = `${r},${g},${b}`;
+    sw.onclick = () => applyBackground(r, g, b);
+    row.appendChild(sw);
+  });
+  applyBackground(26, 24, 20);
 }
 
 // ── COLOR EXTRACTION ──
@@ -728,9 +1096,16 @@ function extractColors(img) {
   const data = ctx.getImageData(0, 0, 60, 60).data;
   const samples = [];
   for (let i = 0; i < data.length; i += 16) samples.push([data[i], data[i+1], data[i+2]]);
-  const colors = kMeans(samples, 4);
+  const colors = kMeans(samples, 6);
+  extractedColors = colors;
   renderPalette(colors);
-  applyColorToCanvas(colors[0]);
+  // Auto-apply darkest extracted color as background
+  const darkest = colors.reduce((a, b) => {
+    const la = 0.299*a[0]+0.587*a[1]+0.114*a[2];
+    const lb = 0.299*b[0]+0.587*b[1]+0.114*b[2];
+    return la < lb ? a : b;
+  });
+  applyBackground(...darkest);
 }
 
 function kMeans(px, k) {
@@ -751,28 +1126,64 @@ function kMeans(px, k) {
 
 function renderPalette(colors) {
   paletteRow.innerHTML = '';
-  colors.forEach((c, i) => {
+  document.getElementById('fromPhotoLabel').style.display = 'block';
+  colors.forEach(([r,g,b]) => {
     const sw = document.createElement('div');
-    sw.className = 'swatch' + (i===0?' active':'');
-    sw.style.background = `rgb(${c[0]},${c[1]},${c[2]})`;
-    sw.onclick = () => { document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active')); sw.classList.add('active'); applyColorToCanvas(c); };
+    sw.className = 'bg-swatch';
+    sw.style.background = `rgb(${r},${g},${b})`;
+    sw.dataset.rgb = `${r},${g},${b}`;
+    sw.onclick = () => applyBackground(r, g, b);
     paletteRow.appendChild(sw);
   });
+  updatePaletteStrip(colors);
+  updateSelvedgeDots();
 }
 
-function applyColorToCanvas(color) {
-  selectedColor = color;
-  const [r,g,b] = color;
-  const lum = 0.299*r + 0.587*g + 0.114*b;
-  const bgR = Math.round(r*0.15+5), bgG = Math.round(g*0.15+5), bgB = Math.round(b*0.15+5);
-  storyCanvas.style.background = `rgb(${bgR},${bgG},${bgB})`;
-  const tc = lum < 100
-    ? `rgba(${Math.round(r*0.8+180)},${Math.round(g*0.8+180)},${Math.round(b*0.8+180)},0.9)`
-    : `rgba(240,235,225,0.9)`;
-  storyText.style.color = tc;
-  decoLine.style.background = tc;
-  watermark.style.color = tc;
-  applyFilter();
+function updateSelvedgeDots() {
+  const colors = extractedColors.length ? extractedColors : SELVEDGE_PLACEHOLDER;
+  const cH = storyCanvas.offsetHeight;
+  const cW = storyCanvas.offsetWidth;
+
+  // CSS パーセントが親の auto-height に対して0に解決する問題を回避するため
+  // storyCanvas の実寸から直接ピクセルサイズを算出してインラインスタイルで設定する
+
+  // ドットサイズは縦バンド基準に統一: バンド幅(canvas_w×20%) × 54%
+  const vDot = Math.max(6, Math.round(cW * 0.20 * 0.54));
+  const hDot = vDot; // 横も同サイズに統一
+
+  const dotsH = document.getElementById('selvedgeDotsH');
+  if (dotsH) {
+    dotsH.innerHTML = '';
+    colors.forEach(([r, g, b]) => {
+      const d = document.createElement('div');
+      d.className = 's-dot';
+      d.style.cssText = `width:${hDot}px;height:${hDot}px;background:rgb(${r},${g},${b})`;
+      dotsH.appendChild(d);
+    });
+  }
+
+  // 縦バンド
+  const dotsV = document.getElementById('selvedgeDotsV');
+  if (dotsV) {
+    dotsV.innerHTML = '';
+    colors.forEach(([r, g, b]) => {
+      const d = document.createElement('div');
+      d.className = 's-dot';
+      d.style.cssText = `width:${vDot}px;height:${vDot}px;background:rgb(${r},${g},${b})`;
+      dotsV.appendChild(d);
+    });
+  }
+}
+
+function updatePaletteStrip(colors) {
+  const strip = document.getElementById('paletteStrip');
+  strip.innerHTML = '';
+  colors.forEach(([r,g,b]) => {
+    const cell = document.createElement('div');
+    cell.className = 'p-cell';
+    cell.style.background = `rgb(${r},${g},${b})`;
+    strip.appendChild(cell);
+  });
 }
 
 function applyFilter() {
@@ -785,14 +1196,23 @@ function applyFilter() {
 toneSlider.addEventListener('input', applyFilter);
 fadeSlider.addEventListener('input', applyFilter);
 
+// ── PHOTO FIT ──
+function setFitMode(mode, btn) {
+  document.querySelectorAll('.fit-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  canvasPhoto.style.objectFit = mode;
+}
+
 // ── LAYOUT ──
 function setLayout(el) {
-  const isPR = el.dataset.pro === 'true';
-  if (isPR && !isPro) { openModal(); return; }
+  // [PRO_LOCK] film, edge, palette, split, frame, duo, selvedge-h, selvedge-v
+  // Stripe連携後にsetLayout()内でisPro判定を復活させる
+  // 例: if (!isPro && el.dataset.pro === 'true') { openModal(); return; }
   document.querySelectorAll('.layout-thumb').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   storyCanvas.className = 'story-canvas ' + el.dataset.layout;
   lockOverlay.classList.remove('show');
+  if (el.dataset.layout.startsWith('layout-selvedge')) updateSelvedgeDots();
 }
 
 // ── TEXT ──
@@ -803,7 +1223,10 @@ document.getElementById('subInput').addEventListener('input', e => {
   document.getElementById('subDisplay').textContent = e.target.value || 'somewhere beautiful';
 });
 document.getElementById('dateInput').addEventListener('input', e => {
-  document.getElementById('dateLine').textContent = e.target.value || '— 2026';
+  const val = e.target.value || '— 2026';
+  document.getElementById('dateLine').textContent = val;
+  const svd = document.getElementById('selvedgeDateH');
+  if (svd) svd.textContent = val;
 });
 
 // ── PRO ──
@@ -817,53 +1240,281 @@ function closeModalIfBg(e) {
   if (e.target === document.getElementById('proModal')) closeModal();
 }
 function activatePro() {
-  // TODO: Stripe連携ここに
   isPro = true;
   closeModal();
   document.getElementById('proBtn').classList.remove('visible');
   document.getElementById('proTag').classList.add('visible');
-  // unlock UI
   document.querySelectorAll('.layout-thumb.locked').forEach(t => {
     t.classList.remove('locked');
     const chip = t.querySelector('.lock-chip');
     if (chip) chip.remove();
   });
   watermark.style.display = 'none';
-  exportNote.textContent = 'high-res · no watermark';
+  exportNote.textContent = '1080px · no watermark';
   showToast('pro unlocked ✓');
 }
 
-// ── EXPORT ──
-function exportImage() {
+// ── EXPORT: 自前 Canvas 合成 1080×1920 ──
+// html2canvas の CSS filter 非対応を回避し ctx.filter で直接描画する
+async function exportImage() {
   if (!hasPhoto) { showToast('まず写真を選んでね'); return; }
   const btn = document.getElementById('exportBtn');
   const restoreBtn = () => {
-    btn.innerHTML = 'Export PNG<span class="free-note">' + (isPro ? 'high-res · no watermark' : 'free version includes tono. watermark') + '</span>';
+    btn.innerHTML = `Export PNG<span class="free-note">${isPro ? '1080px · no watermark' : 'free version includes tono. watermark'}</span>`;
     btn.disabled = false;
   };
   btn.textContent = 'Exporting…';
   btn.disabled = true;
 
-  html2canvas(storyCanvas, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: null,
-    logging: false
-  }).then(canvas => {
-    const dataURL = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = 'tono-story.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    restoreBtn();
-    showToast(isPro ? 'exported!' : 'exported with watermark');
-  }).catch(() => {
+  try {
+    await document.fonts.ready;
+    const EW = 1080, EH = 1920;
+    const cv = document.createElement('canvas');
+    cv.width = EW; cv.height = EH;
+    const ctx = cv.getContext('2d');
+
+    // 背景
+    const [r, g, b] = currentBgRgb;
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(0, 0, EW, EH);
+
+    const lum = 0.299*r + 0.587*g + 0.114*b;
+    const tc = lum > 140 ? 'rgba(26,24,20,0.85)' : 'rgba(245,242,238,0.85)';
+    const layout = [...storyCanvas.classList].find(c => c.startsWith('layout-')) || 'layout-top';
+    const geo = exportGeo(layout, EW, EH);
+
+    // 写真（ユーザーのズーム/パンを反映して描画）
+    const previewW = storyCanvas.getBoundingClientRect().width;
+    const exportS  = EW / previewW; // preview→export スケール
+    drawExportPhoto(ctx, canvasPhoto, geo,
+      canvasPhoto.style.filter,
+      canvasPhoto.style.objectFit === 'contain',
+      photoZoom, photoX * exportS, photoY * exportS);
+
+    // パレットストリップ
+    if (layout === 'layout-palette' && extractedColors.length) {
+      const cw = EW / extractedColors.length;
+      extractedColors.forEach(([cr,cg,cb], i) => {
+        ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+        ctx.fillRect(i * cw, EH * 0.75, cw, EH * 0.25);
+      });
+    }
+
+    // テキスト
+    exportText(ctx, layout, EW, EH, tc);
+
+    // デコライン（palette/duo/selvedge 以外）
+    const isSelvedge = layout.startsWith('layout-selvedge');
+    if (layout !== 'layout-palette' && layout !== 'layout-duo' && !isSelvedge) {
+      ctx.fillStyle = tc; ctx.globalAlpha = 0.25;
+      ctx.fillRect(EW * 0.74, EH * 0.942, EW * 0.20, 2);
+      ctx.globalAlpha = 1;
+    }
+
+    // 透かし（selvedge はバンドに tono. が入るため除外）
+    if (!isPro && !isSelvedge) {
+      ctx.save();
+      ctx.font = `300 italic ${Math.round(EH * 0.013)}px "Cormorant Garamond", serif`;
+      ctx.fillStyle = tc; ctx.globalAlpha = 0.3; ctx.textAlign = 'right';
+      const wmX = layout === 'layout-duo' ? EW * 0.57 : EW * 0.94;
+      const wmY = layout === 'layout-palette' ? EH * 0.735 : EH * 0.963;
+      ctx.fillText('tono.', wmX, wmY);
+      ctx.restore();
+    }
+
+    // ダウンロード
+    cv.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'tono-story.png';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      restoreBtn();
+      showToast(isPro ? 'exported!' : 'exported with watermark');
+    }, 'image/png');
+
+  } catch (err) {
+    console.error(err);
     restoreBtn();
     showToast('エクスポートに失敗しました');
-  });
+  }
+}
+
+// レイアウトごとの写真フレーム座標（1080×1920 基準）
+function exportGeo(layout, W, H) {
+  switch (layout) {
+    case 'layout-top':     return { x:W*.06, y:H*.07,            w:W*.88, h:H*.60, r:5 };
+    case 'layout-center':  return { x:W*.06, y:H*.5-H*.55*.58,   w:W*.88, h:H*.55, r:5 };
+    case 'layout-film':    return { x:W*.10, y:H*.09,            w:W*.80, h:H*.62, r:3 };
+    case 'layout-edge':    return { x:0,     y:0,                w:W,     h:H*.52, r:0 };
+    case 'layout-palette': return { x:0,     y:0,                w:W,     h:H*.75, r:0 };
+    case 'layout-split':   return { x:0,     y:0,                w:W,     h:H*.50, r:0 };
+    case 'layout-frame':   return { x:W*.08, y:H*.06,            w:W*.84, h:H*.70, r:5 };
+    case 'layout-duo':         return { x:0,     y:0, w:W*.60, h:H,     r:0 };
+    case 'layout-selvedge-h':  return { x:0,     y:0, w:W,     h:H*.80, r:0 };
+    case 'layout-selvedge-v':  return { x:W*.20, y:0, w:W*.80, h:H,     r:0 };
+    default:               return { x:W*.06, y:H*.07,            w:W*.88, h:H*.60, r:5 };
+  }
+}
+
+// zoom/pan を含む写真描画（object-fit: cover / contain 相当をCanvasで再現）
+function drawExportPhoto(ctx, img, geo, filterStr, fitMode, zoom, tx, ty) {
+  ctx.save();
+  ctx.beginPath();
+  if (geo.r > 0) exportRoundRect(ctx, geo.x, geo.y, geo.w, geo.h, geo.r);
+  else ctx.rect(geo.x, geo.y, geo.w, geo.h);
+  ctx.clip();
+  if (filterStr && filterStr !== 'none') ctx.filter = filterStr;
+
+  // フレーム中心 + ユーザーのパンオフセットを原点にしてスケール
+  ctx.translate(geo.x + geo.w / 2 + tx, geo.y + geo.h / 2 + ty);
+  ctx.scale(zoom, zoom);
+
+  const iAr = img.naturalWidth / img.naturalHeight;
+  const fAr = geo.w / geo.h;
+  if (fitMode) {
+    // contain: フレームに収まるサイズ
+    let dw, dh;
+    if (iAr > fAr) { dw = geo.w; dh = dw / iAr; }
+    else             { dh = geo.h; dw = dh * iAr; }
+    ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+  } else {
+    // cover: フレームを埋めるサイズ（原点=フレーム中心）
+    let drawW, drawH;
+    if (iAr > fAr) { drawH = geo.h; drawW = drawH * iAr; }
+    else             { drawW = geo.w; drawH = drawW / iAr; }
+    ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+  }
+  ctx.filter = 'none';
+  ctx.restore();
+}
+
+function exportRoundRect(ctx, x, y, w, h, r) {
+  r = Math.min(r, w/2, h/2);
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+// テキスト描画（プレビュー 498px 基準からスケール）
+function exportText(ctx, layout, W, H, tc) {
+  // S: プレビュー高さ(498px)→エクスポート高さへのスケール係数
+  const S  = H / 498;
+  const ds = 7 * S, cs = 20 * S, ss = 7 * S;
+  const dStr = document.getElementById('dateLine').textContent;
+  const cStr = document.getElementById('captionDisplay').textContent;
+  const sStr = document.getElementById('subDisplay').textContent;
+  ctx.fillStyle = tc;
+
+  if (layout === 'layout-selvedge-h' || layout === 'layout-selvedge-v') {
+    exportSelvedgeBand(ctx, layout, W, H, tc);
+    return;
+  }
+
+  if (layout === 'layout-duo') {
+    // 縦書き風：90°回転して右カラムに描画
+    ctx.save();
+    ctx.translate(W * 0.915, H * 0.20);
+    ctx.rotate(Math.PI / 2);
+    ctx.font = `300 ${Math.round(ds)}px "DM Sans", sans-serif`;
+    ctx.globalAlpha = 0.5; ctx.fillText(dStr, 0, 0); ctx.globalAlpha = 1;
+    ctx.font = `300 italic ${Math.round(cs)}px "Cormorant Garamond", serif`;
+    ctx.fillText(cStr, ds * 1.4 + 4*S, 0);
+    ctx.font = `300 ${Math.round(ss)}px "DM Sans", sans-serif`;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(sStr, ds*1.4 + 4*S + cs*1.25 + 5*S, 0);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    return;
+  }
+
+  // プレビュー CSS から逆算したテキストブロック上端（プレビュー px → export px）
+  // テキストブロック高さ ≈ 45px（7+4+22+5+7）in 498px canvas
+  let stTop;
+  switch (layout) {
+    case 'layout-edge':    stTop = 298.8 * S; break; // top:55% + padding:5%
+    case 'layout-palette': stTop = 313.56 * S; break; // bottom:28% → top at (498*.72-45)
+    case 'layout-split':   stTop = 268.92 * S; break; // top:54%
+    case 'layout-frame':   stTop = 438.06 * S; break; // bottom:3% → top at (498*.97-45)
+    default:               stTop = 408.18 * S;         // bottom:9% → top at (498*.91-45)
+  }
+
+  const tx = W * 0.06;
+  // 各行のベースライン（ascent ≈ font-size * 0.75）
+  ctx.font = `300 ${Math.round(ds)}px "DM Sans", sans-serif`;
+  ctx.globalAlpha = 0.5;
+  ctx.fillText(dStr, tx, stTop + ds * 0.75);
+  ctx.globalAlpha = 1;
+
+  ctx.font = `300 italic ${Math.round(cs)}px "Cormorant Garamond", serif`;
+  ctx.fillText(cStr, tx, stTop + 27 * S);
+
+  ctx.font = `300 ${Math.round(ss)}px "DM Sans", sans-serif`;
+  ctx.globalAlpha = 0.5;
+  ctx.fillText(sStr, tx, stTop + 43.6 * S);
+  ctx.globalAlpha = 1;
+}
+
+// selvedge バンドを Canvas に直接描画（エクスポート用）
+function exportSelvedgeBand(ctx, layout, W, H, tc) {
+  const S = H / 498;
+  const colors = extractedColors.length ? extractedColors : SELVEDGE_PLACEHOLDER;
+  const padX = W * 0.06;
+
+  if (layout === 'layout-selvedge-h') {
+    const bandY = H * 0.80, bandH = H * 0.20;
+    const dotD  = bandH * 0.44;
+    const availW = W - 2 * padX;
+    const gap   = colors.length > 1 ? (availW - dotD * colors.length) / (colors.length - 1) : 0;
+
+    colors.forEach(([r,g,b], i) => {
+      ctx.beginPath();
+      ctx.arc(padX + dotD/2 + i*(dotD+gap), bandY + bandH*0.36, dotD/2, 0, Math.PI*2);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fill();
+    });
+
+    const textY = bandY + bandH * 0.82;
+    ctx.fillStyle = tc;
+    ctx.font = `300 italic ${Math.round(7*S)}px "Cormorant Garamond", serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('tono.', padX, textY);
+    ctx.globalAlpha = 0.6;
+    ctx.font = `300 ${Math.round(6*S)}px "DM Sans", sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText(document.getElementById('dateLine').textContent, W - padX, textY);
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+
+  } else { // selvedge-v
+    const bandW = W * 0.20;
+    const dotD  = bandW * 0.54;
+    const padY  = H * 0.06;
+    const availH = H * 0.68;
+    const gap   = colors.length > 1 ? (availH - dotD * colors.length) / (colors.length - 1) : 0;
+
+    colors.forEach(([r,g,b], i) => {
+      ctx.beginPath();
+      ctx.arc(bandW / 2, padY + dotD/2 + i*(dotD+gap), dotD/2, 0, Math.PI*2);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fill();
+    });
+
+    ctx.save();
+    ctx.translate(bandW * 0.62, H * 0.91);
+    ctx.rotate(Math.PI / 2);
+    ctx.fillStyle = tc; ctx.globalAlpha = 0.72;
+    ctx.font = `300 italic ${Math.round(7*S)}px "Cormorant Garamond", serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText('tono.', 0, 0);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+  }
 }
 
 function showToast(msg) {
@@ -872,6 +1523,10 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
+
+// ── INIT ──
+renderBgBasePalette();
+updateSelvedgeDots();
 
 // ── PWA SERVICE WORKER ──
 if ('serviceWorker' in navigator) {
