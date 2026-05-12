@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -10,7 +10,7 @@
 <title>tono. — story maker</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,6 +23,8 @@
   --locked: #d4cfc9;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
+  /* ミニマル・中性的なシステムフォント */
+  --sys: system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Noto Sans JP", sans-serif;
 }
 
 html, body {
@@ -31,12 +33,14 @@ html, body {
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--sys);
   background: var(--bg);
   color: var(--text);
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 /* ───── HEADER ───── */
@@ -87,18 +91,18 @@ header {
 .app-shell {
   flex: 1;
   display: flex;
+  flex-direction: column; /* スマホ: 縦1カラム */
   overflow: hidden;
-  position: relative;
+  min-height: 0;
 }
 
-/* ── MOBILE: vertical stack ── */
-/* CANVAS AREA */
+/* ── CANVAS AREA ── */
 .canvas-area {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 16px 0 8px;
+  padding: 12px 0;
 }
 
 .story-canvas {
@@ -112,12 +116,13 @@ header {
   transform: translateZ(0); /* GPU合成でbox-shadow由来のアーティファクトを防止 */
 }
 
-/* 9:16 canvas sized to fit screen */
+/* キャンバスは PC・スマホ共通で常に基準サイズ固定。
+   スマホでは JS が transform:scale() で縮小表示するだけ。
+   内部レイアウト・フォントサイズ・パン値は一切変わらないため
+   プレビューと PNG 出力が完全一致する。 */
 .story-canvas {
-  width: calc((100dvh - 200px) * 9 / 16);
-  height: calc(100dvh - 200px);
-  max-width: 240px;
-  max-height: 426px;
+  width: 280px;
+  height: 498px;
 }
 
 /* photo frame layouts */
@@ -148,7 +153,7 @@ header {
 
 .story-text {
   position: absolute; left: 6%; right: 6%;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--sys);
   font-weight: 300;
   transition: color 0.4s;
 }
@@ -157,15 +162,43 @@ header {
 .layout-edge .story-text { top: 55%; padding-top: 5%; }
 
 .story-text .s-date {
-  font-size: 7px; letter-spacing: 0.2em; opacity: 0.5;
-  font-family: 'DM Sans', sans-serif; font-weight: 300; margin-bottom: 4px;
+  font-size: 7px; letter-spacing: 0.16em; opacity: 0.5;
+  font-weight: 400; margin-bottom: 4px;
 }
 .story-text .s-main {
-  font-size: 20px; line-height: 1.1; font-style: italic;
+  font-size: 18px; line-height: 1.2; font-weight: 300;
+  letter-spacing: 0.01em;
 }
 .story-text .s-sub {
-  font-size: 7px; letter-spacing: 0.16em; opacity: 0.5;
-  font-family: 'DM Sans', sans-serif; font-weight: 300; margin-top: 5px;
+  font-size: 7px; letter-spacing: 0.12em; opacity: 0.5;
+  font-weight: 300; margin-top: 5px;
+}
+
+/* テキスト選択ハイライト（タップフィードバック） */
+.story-text .s-main.text-selected,
+.story-text .s-date.text-selected,
+.story-text .s-sub.text-selected {
+  outline: 1px solid rgba(200,184,154,0.6);
+  border-radius: 2px;
+  background: rgba(200,184,154,0.1);
+  transition: outline 0.15s, background 0.15s;
+}
+
+/* テキスト ON/OFF トグル */
+.text-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.text-toggle {
+  padding: 3px 10px; font-size: 10px; letter-spacing: 0.08em;
+  border: 1px solid var(--text); border-radius: 2px;
+  background: var(--text); color: var(--bg);
+  cursor: pointer; font-family: var(--sys);
+  transition: all 0.15s; flex-shrink: 0;
+}
+.text-toggle.off {
+  background: transparent; color: var(--muted);
+  border-color: rgba(0,0,0,0.15);
 }
 
 .deco-line {
@@ -208,7 +241,7 @@ header {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 0 calc(16px + var(--safe-bottom));
+  min-height: 0; /* flex shrink がコンテンツ高さを超えて働くために必須 */
 }
 
 .tab-bar {
@@ -219,11 +252,13 @@ header {
 }
 
 .tab {
-  flex: 1; padding: 12px 0;
+  flex: 1; padding: 0;
+  height: 44px; line-height: 44px;
   font-size: 10px; letter-spacing: 0.1em;
   color: var(--muted); text-align: center;
   cursor: pointer; border-bottom: 1.5px solid transparent;
   transition: all 0.2s; text-transform: uppercase;
+  user-select: none;
 }
 .tab.active { color: var(--text); border-color: var(--text); }
 
@@ -288,7 +323,7 @@ input[type=range]::-webkit-slider-thumb {
 
 /* LAYOUT TAB */
 .layout-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
 }
 .layout-thumb {
   aspect-ratio: 9/16; border-radius: 4px;
@@ -332,24 +367,28 @@ input[type=range]::-webkit-slider-thumb {
 .text-input {
   width: 100%; background: transparent; border: none;
   border-bottom: 1px solid rgba(0,0,0,0.12);
-  padding: 6px 0; font-family: 'DM Sans', sans-serif;
-  font-size: 14px; font-weight: 300; color: var(--text);
+  padding: 10px 0; font-family: var(--sys);
+  font-size: 16px; /* iOS 自動ズーム防止 */
+  font-weight: 300; color: var(--text);
   outline: none; -webkit-appearance: none;
   border-radius: 0;
 }
 .text-input:focus { border-color: var(--text); }
 .text-input::placeholder { color: var(--muted); opacity: 0.5; }
-.caption-input { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 18px; }
+.caption-input { font-size: 16px; font-weight: 300; }
 
 /* EXPORT */
 .export-area {
-  padding: 20px;
+  padding: 10px 16px calc(10px + var(--safe-bottom));
   border-top: 1px solid rgba(0,0,0,0.06);
   flex-shrink: 0;
+  background: var(--bg);
+  z-index: 10;
 }
 
 .export-btn {
-  width: 100%; padding: 14px;
+  width: 100%;
+  height: 52px;
   background: var(--text); color: var(--bg);
   border: none; border-radius: 3px;
   font-family: 'DM Sans', sans-serif;
@@ -357,6 +396,8 @@ input[type=range]::-webkit-slider-thumb {
   text-transform: uppercase; cursor: pointer;
   transition: all 0.2s; font-weight: 400;
   position: relative;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 2px;
 }
 .export-btn:active { transform: scale(0.98); }
 .export-btn .free-note {
@@ -438,14 +479,91 @@ input[type=range]::-webkit-slider-thumb {
   cursor: pointer;
 }
 
-/* ── DESKTOP OVERRIDE ── */
+/* canvas 内のテキストはタップして編集できることを示す */
+.story-text .s-main,
+.story-text .s-date,
+.story-text .s-sub { cursor: pointer; }
+
+/* ── BOTTOM SHEET (スマホ専用) ── */
+@media (max-width: 767px) {
+  .app-shell { overflow: visible; min-height: 0; }
+
+  /* canvas-area: シートは下から重なるだけ。canvas サイズは一切変えない */
+  .canvas-area {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12px;
+  }
+
+  /* ボトムシート本体: 高さ固定・translateY で開閉 */
+  .bottom-sheet {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60vh;                /* 常に60vh分の高さを確保 */
+    background: var(--bg);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.10);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    /* 閉じた状態: ハンドル48pxだけ下端に見える */
+    transform: translateY(calc(100% - 48px));
+    transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1);
+    will-change: transform;
+    overflow: hidden;
+  }
+  /* 開いた状態 */
+  .bottom-sheet.sheet-open { transform: translateY(0); }
+
+  /* ハンドル: タップで開閉 */
+  .sheet-handle-wrap {
+    flex-shrink: 0;
+    height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .sheet-handle-wrap:active { opacity: 0.6; }
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: rgba(0,0,0,0.20);
+    border-radius: 2px;
+  }
+
+  /* コントロール: スクロール可能 */
+  .bottom-sheet .controls {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    min-height: 0;
+  }
+
+  /* エクスポートボタン */
+  .bottom-sheet .export-area {
+    flex-shrink: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--bg);
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+}
+
+/* ── DESKTOP (768px+) : 左右2カラムレイアウト ── */
 @media (min-width: 768px) {
   html, body { overflow: auto; height: auto; }
 
+  body { -webkit-touch-callout: auto; }
+
   .app-shell {
-    flex-direction: row;
+    flex-direction: row;   /* PC: 横並び */
     overflow: visible;
     min-height: calc(100dvh - 69px);
+    min-height: 0; /* reset mobile */
   }
 
   .canvas-area {
@@ -457,15 +575,17 @@ input[type=range]::-webkit-slider-thumb {
     border-right: 1px solid rgba(0,0,0,0.06);
   }
 
-  .story-canvas {
-    width: 280px; height: 498px;
-    max-width: none; max-height: none;
-  }
+  /* .story-canvas は基底 CSS で 280×498px 固定済み（上書き不要） */
 
   .controls {
     flex: 1;
     overflow-y: visible;
-    padding-bottom: 0;
+    min-height: auto;
+  }
+
+  .tab {
+    height: auto; line-height: normal;
+    padding: 12px 0;
   }
 
   .tab-bar { top: 0; }
@@ -474,12 +594,28 @@ input[type=range]::-webkit-slider-thumb {
 
   .layout-grid { grid-template-columns: repeat(4, 80px); }
 
+  .bg-swatch { width: 28px; height: 28px; }
+  .bg-swatch::after { display: none; }
+
+  .text-input { font-size: 14px; padding: 6px 0; }
+
   .export-area {
     position: sticky; bottom: 0;
     background: var(--bg);
     border-top: 1px solid rgba(0,0,0,0.06);
     max-width: 480px; padding: 20px;
   }
+
+  .export-btn {
+    height: auto; padding: 14px;
+    display: block;
+  }
+
+  /* ボトムシートラッパーを無効化: 子要素を app-shell の直接の子として扱う */
+  .bottom-sheet {
+    display: contents;
+  }
+  .sheet-handle-wrap { display: none; }
 }
 
 @media (min-width: 1024px) {
@@ -489,10 +625,16 @@ input[type=range]::-webkit-slider-thumb {
 
 /* ── BACKGROUND SWATCHES ── */
 .bg-swatch {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   cursor: pointer; border: 2px solid transparent;
   transition: all 0.2s; flex-shrink: 0;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+  /* 44px タップ領域 */
+  position: relative;
+}
+.bg-swatch::after {
+  content: ''; position: absolute;
+  inset: -4px; border-radius: 50%;
 }
 .bg-swatch.active {
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text), inset 0 0 0 1px rgba(0,0,0,0.1);
@@ -651,6 +793,77 @@ input[type=range]::-webkit-slider-thumb {
 }
 .lt-svv-band span { width: 54%; aspect-ratio: 1; border-radius: 50%; flex-shrink: 0; }
 
+/* ── LAND LAYOUTS（3:2 横長） ── */
+.story-canvas.layout-land-top .photo-frame {
+  position: absolute; top: 10%; left: 0; right: 0; height: 37.5%;
+  border-radius: 0; overflow: hidden;
+}
+.story-canvas.layout-land-top .story-text { bottom: 6%; left: 0; right: 0; text-align: center; }
+
+.story-canvas.layout-land-center .photo-frame {
+  position: absolute; top: 50%; left: 8%; right: 8%;
+  transform: translateY(-50%); height: 31.5%; border-radius: 3px; overflow: hidden;
+}
+.story-canvas.layout-land-center .story-text { top: 7%; bottom: auto; left: 0; right: 0; text-align: center; }
+
+.story-canvas.layout-land-frame .photo-frame {
+  position: absolute; top: 50%; left: 8%; right: 8%;
+  transform: translateY(-50%); height: 31.5%; border-radius: 3px; overflow: hidden;
+}
+.story-canvas.layout-land-frame .story-text,
+.story-canvas.layout-land-frame .deco-line { display: none; }
+
+/* ── PORT LAYOUTS（2:3 縦長） ── */
+.story-canvas.layout-port-top .photo-frame {
+  position: absolute; top: 8%; left: 14%; right: 14%;
+  height: 61%; border-radius: 3px; overflow: hidden;
+}
+.story-canvas.layout-port-top .story-text { bottom: 5%; left: 0; right: 0; text-align: center; }
+
+.story-canvas.layout-port-center .photo-frame {
+  position: absolute; top: 50%; left: 18%; right: 18%;
+  transform: translateY(-50%); height: 54%; border-radius: 3px; overflow: hidden;
+}
+.story-canvas.layout-port-center .story-text { top: 5%; bottom: auto; left: 0; right: 0; text-align: center; }
+
+.story-canvas.layout-port-frame .photo-frame {
+  position: absolute; top: 50%; left: 8%; right: 8%;
+  transform: translateY(-50%); height: 71%; border-radius: 3px; overflow: hidden;
+}
+.story-canvas.layout-port-frame .story-text,
+.story-canvas.layout-port-frame .deco-line { display: none; }
+
+/* Land/Port: object-fit contain で写真比率を維持（余白は背景色） */
+.story-canvas.layout-land-top .photo-frame img,
+.story-canvas.layout-land-center .photo-frame img,
+.story-canvas.layout-land-frame .photo-frame img,
+.story-canvas.layout-port-top .photo-frame img,
+.story-canvas.layout-port-center .photo-frame img,
+.story-canvas.layout-port-frame .photo-frame img { object-fit: contain; }
+
+/* Land サムネイル */
+.t-ldt .lt-photo { top: 10%; left: 0; right: 0; height: 37%; border-radius: 0; }
+.t-ldt .lt-line  { bottom: 16%; left: 12%; right: 30%; }
+.t-ldc .lt-photo { top: 50%; left: 8%; right: 8%; transform: translateY(-50%); height: 31%; border-radius: 1px; }
+.t-ldc .lt-line  { top: 12%; left: 12%; right: 30%; }
+.t-ldf .lt-photo { top: 50%; left: 8%; right: 8%; transform: translateY(-50%); height: 31%; border-radius: 1px; }
+
+/* Port サムネイル */
+.t-ppt .lt-photo { top: 8%; left: 14%; right: 14%; height: 61%; border-radius: 1px; }
+.t-ppt .lt-line  { bottom: 10%; left: 12%; right: 30%; }
+.t-ppc .lt-photo { top: 50%; left: 18%; right: 18%; transform: translateY(-50%); height: 54%; border-radius: 1px; }
+.t-ppc .lt-line  { top: 9%; left: 12%; right: 30%; }
+.t-ppf .lt-photo { top: 50%; left: 8%; right: 8%; transform: translateY(-50%); height: 71%; border-radius: 1px; }
+
+/* 比率バッジ */
+.ratio-badge {
+  position: absolute; top: 5px; right: 5px;
+  background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.5);
+  font-size: 7px; letter-spacing: 0.08em;
+  padding: 2px 4px; border-radius: 2px;
+  font-family: 'DM Sans', sans-serif; line-height: 1; z-index: 2;
+}
+
 /* TOAST */
 .toast {
   position: fixed; bottom: 32px; left: 50%;
@@ -681,7 +894,7 @@ input[type=range]::-webkit-slider-thumb {
 <div class="app-shell">
 
   <!-- CANVAS -->
-  <div class="canvas-area">
+  <div class="canvas-area" id="canvasArea">
     <div class="story-canvas layout-top" id="storyCanvas">
       <div class="photo-frame" id="photoFrame">
         <img id="canvasPhoto" src="" alt="" style="display:none">
@@ -723,8 +936,14 @@ input[type=range]::-webkit-slider-thumb {
     </div>
   </div>
 
-  <!-- CONTROLS -->
-  <div class="controls">
+  <!-- BOTTOM SHEET: スマホ=fixed シート / PC=display:contents で透明ラッパー -->
+  <div class="bottom-sheet" id="bottomSheet">
+    <div class="sheet-handle-wrap" id="sheetHandleWrap">
+      <div class="sheet-handle"></div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
     <div class="tab-bar">
       <div class="tab active" onclick="switchTab('photo', this)">Photo</div>
       <div class="tab" onclick="switchTab('layout', this)">Layout</div>
@@ -734,7 +953,7 @@ input[type=range]::-webkit-slider-thumb {
     <!-- PHOTO TAB -->
     <div class="tab-panel active" id="tab-photo">
       <div class="drop-zone" id="dropZone">
-        <input type="file" id="fileInput" accept="image/*" capture="environment">
+        <input type="file" id="fileInput" accept="image/*">
         <div class="dz-text">tap to choose photo</div>
         <div class="dz-sub">or drag & drop</div>
       </div>
@@ -777,19 +996,19 @@ input[type=range]::-webkit-slider-thumb {
       <div class="layout-grid">
         <div class="layout-thumb t-top active" data-layout="layout-top" data-pro="false" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
-          <span class="thumb-name">top</span>
+          <span class="thumb-name">top</span><span class="ratio-badge">9:16</span>
         </div>
         <div class="layout-thumb t-cen" data-layout="layout-center" data-pro="false" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
-          <span class="thumb-name">center</span>
+          <span class="thumb-name">center</span><span class="ratio-badge">9:16</span>
         </div>
         <div class="layout-thumb t-fil" data-layout="layout-film" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
-          <span class="thumb-name">film</span>
+          <span class="thumb-name">film</span><span class="ratio-badge">9:16</span>
         </div>
         <div class="layout-thumb t-edg" data-layout="layout-edge" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
-          <span class="thumb-name">edge</span>
+          <span class="thumb-name">edge</span><span class="ratio-badge">9:16</span>
         </div>
         <div class="layout-thumb t-pal" data-layout="layout-palette" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div>
@@ -801,19 +1020,19 @@ input[type=range]::-webkit-slider-thumb {
             <span style="background:rgba(85,65,40,0.7)"></span>
             <span style="background:rgba(55,40,22,0.7)"></span>
           </div>
-          <span class="thumb-name">palette</span>
+          <span class="thumb-name">palette</span><span class="ratio-badge">free</span>
         </div>
         <div class="layout-thumb t-spl" data-layout="layout-split" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
-          <span class="thumb-name">split</span>
+          <span class="thumb-name">split</span><span class="ratio-badge">free</span>
         </div>
         <div class="layout-thumb t-frm" data-layout="layout-frame" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div><div class="lt-line"></div>
-          <span class="thumb-name">frame</span>
+          <span class="thumb-name">frame</span><span class="ratio-badge">free</span>
         </div>
         <div class="layout-thumb t-duo" data-layout="layout-duo" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div>
-          <span class="thumb-name">duo</span>
+          <span class="thumb-name">duo</span><span class="ratio-badge">free</span>
         </div>
         <div class="layout-thumb t-svh" data-layout="layout-selvedge-h" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div>
@@ -825,7 +1044,7 @@ input[type=range]::-webkit-slider-thumb {
             <span style="background:rgba(80,58,32,0.85)"></span>
             <span style="background:rgba(50,35,18,0.85)"></span>
           </div>
-          <span class="thumb-name">selvdge</span>
+          <span class="thumb-name">selvdge</span><span class="ratio-badge">any</span>
         </div>
         <div class="layout-thumb t-svv" data-layout="layout-selvedge-v" data-pro="true" onclick="setLayout(this)">
           <div class="lt-photo"></div>
@@ -837,7 +1056,31 @@ input[type=range]::-webkit-slider-thumb {
             <span style="background:rgba(80,58,32,0.85)"></span>
             <span style="background:rgba(50,35,18,0.85)"></span>
           </div>
-          <span class="thumb-name">seldg-v</span>
+          <span class="thumb-name">seldg-v</span><span class="ratio-badge">any</span>
+        </div>
+        <div class="layout-thumb t-ldt" data-layout="layout-land-top" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div><div class="lt-line"></div>
+          <span class="thumb-name">land-t</span><span class="ratio-badge">3:2</span>
+        </div>
+        <div class="layout-thumb t-ldc" data-layout="layout-land-center" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div><div class="lt-line"></div>
+          <span class="thumb-name">land-c</span><span class="ratio-badge">3:2</span>
+        </div>
+        <div class="layout-thumb t-ldf" data-layout="layout-land-frame" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div>
+          <span class="thumb-name">land-f</span><span class="ratio-badge">3:2</span>
+        </div>
+        <div class="layout-thumb t-ppt" data-layout="layout-port-top" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div><div class="lt-line"></div>
+          <span class="thumb-name">port-t</span><span class="ratio-badge">2:3</span>
+        </div>
+        <div class="layout-thumb t-ppc" data-layout="layout-port-center" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div><div class="lt-line"></div>
+          <span class="thumb-name">port-c</span><span class="ratio-badge">2:3</span>
+        </div>
+        <div class="layout-thumb t-ppf" data-layout="layout-port-frame" data-pro="true" onclick="setLayout(this)">
+          <div class="lt-photo"></div>
+          <span class="thumb-name">port-f</span><span class="ratio-badge">2:3</span>
         </div>
       </div>
       <p style="font-size:11px;color:var(--muted);margin-top:16px;letter-spacing:0.04em;line-height:1.6;">
@@ -848,30 +1091,41 @@ input[type=range]::-webkit-slider-thumb {
     <!-- TEXT TAB -->
     <div class="tab-panel" id="tab-text">
       <div class="input-group">
-        <label class="input-label">Caption</label>
+        <div class="text-toggle-row">
+          <label class="input-label">Caption</label>
+          <button class="text-toggle" id="toggle-caption" onclick="toggleTextItem('caption',this)">ON</button>
+        </div>
         <input class="text-input caption-input" id="captionInput" type="text"
           placeholder="a quiet moment" maxlength="40" autocomplete="off">
       </div>
       <div class="input-group">
-        <label class="input-label">Sub text</label>
+        <div class="text-toggle-row">
+          <label class="input-label">Sub text</label>
+          <button class="text-toggle" id="toggle-sub" onclick="toggleTextItem('sub',this)">ON</button>
+        </div>
         <input class="text-input" id="subInput" type="text"
           placeholder="somewhere beautiful" maxlength="40" autocomplete="off">
       </div>
       <div class="input-group">
-        <label class="input-label">Date / tag</label>
+        <div class="text-toggle-row">
+          <label class="input-label">Date / tag</label>
+          <button class="text-toggle" id="toggle-date" onclick="toggleTextItem('date',this)">ON</button>
+        </div>
         <input class="text-input" id="dateInput" type="text"
           placeholder="— 2026" maxlength="20" autocomplete="off">
       </div>
     </div>
   </div>
 
-  <!-- EXPORT -->
-  <div class="export-area">
-    <button class="export-btn" id="exportBtn" onclick="exportImage()">
-      Export PNG
-      <span class="free-note" id="exportNote">free version includes tono. watermark</span>
-    </button>
-  </div>
+    <!-- EXPORT -->
+    <div class="export-area">
+      <button class="export-btn" id="exportBtn" onclick="exportImage()">
+        Export PNG
+        <span class="free-note" id="exportNote">free version includes tono. watermark</span>
+      </button>
+    </div>
+
+  </div><!-- /bottom-sheet -->
 
 </div><!-- app-shell -->
 
@@ -911,6 +1165,19 @@ let extractedColors = [];
 let currentBgRgb = [26, 24, 20];
 let hasPhoto = false;
 let photoZoom = 1, photoX = 0, photoY = 0;
+let canvasScale = 1; // モバイルで story-canvas に適用する transform:scale 値
+
+// テキスト要素の表示/非表示（OFF でも入力値は保持）
+const textVisibility = { caption: true, sub: true, date: true };
+
+function toggleTextItem(key, btn) {
+  textVisibility[key] = !textVisibility[key];
+  const ids = { caption: 'captionDisplay', sub: 'subDisplay', date: 'dateLine' };
+  const el = document.getElementById(ids[key]);
+  if (el) el.style.display = textVisibility[key] ? '' : 'none';
+  btn.textContent = textVisibility[key] ? 'ON' : 'OFF';
+  btn.classList.toggle('off', !textVisibility[key]);
+}
 let isDragging = false;
 const dragStart = { x: 0, y: 0, px: 0, py: 0 };
 const touchSt = { dragging: false, pinching: false, initDist: 0, initZoom: 1, sx: 0, sy: 0, spx: 0, spy: 0 };
@@ -942,6 +1209,8 @@ function switchTab(name, el) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
+  // タブ切り替えでシートが PEEK なら HALF に展開
+  if (window._sheet) window._sheet.expandIfPeek();
 }
 
 // ── PHOTO ──
@@ -1000,8 +1269,8 @@ photoFrame.addEventListener('mousedown', e => {
 });
 document.addEventListener('mousemove', e => {
   if (!isDragging) return;
-  photoX = dragStart.px + (e.clientX - dragStart.x);
-  photoY = dragStart.py + (e.clientY - dragStart.y);
+  photoX = dragStart.px + (e.clientX - dragStart.x) / canvasScale;
+  photoY = dragStart.py + (e.clientY - dragStart.y) / canvasScale;
   applyPhotoTransform();
 });
 document.addEventListener('mouseup', () => {
@@ -1037,8 +1306,8 @@ photoFrame.addEventListener('touchstart', e => {
 document.addEventListener('touchmove', e => {
   if (touchSt.dragging && e.touches.length === 1) {
     e.preventDefault();
-    photoX = touchSt.spx + (e.touches[0].clientX - touchSt.sx);
-    photoY = touchSt.spy + (e.touches[0].clientY - touchSt.sy);
+    photoX = touchSt.spx + (e.touches[0].clientX - touchSt.sx) / canvasScale;
+    photoY = touchSt.spy + (e.touches[0].clientY - touchSt.sy) / canvasScale;
     applyPhotoTransform();
   } else if (touchSt.pinching && e.touches.length === 2) {
     e.preventDefault();
@@ -1205,7 +1474,7 @@ function setFitMode(mode, btn) {
 
 // ── LAYOUT ──
 function setLayout(el) {
-  // [PRO_LOCK] film, edge, palette, split, frame, duo, selvedge-h, selvedge-v
+  // [PRO_LOCK] film, edge, palette, split, frame, duo, selvedge-h, selvedge-v, land-top, land-center, land-frame, port-top, port-center, port-frame
   // Stripe連携後にsetLayout()内でisPro判定を復活させる
   // 例: if (!isPro && el.dataset.pro === 'true') { openModal(); return; }
   document.querySelectorAll('.layout-thumb').forEach(t => t.classList.remove('active'));
@@ -1254,6 +1523,7 @@ function activatePro() {
   showToast('pro unlocked ✓');
 }
 
+
 // ── EXPORT: 自前 Canvas 合成 1080×1920 ──
 // html2canvas の CSS filter 非対応を回避し ctx.filter で直接描画する
 async function exportImage() {
@@ -1284,11 +1554,15 @@ async function exportImage() {
     const geo = exportGeo(layout, EW, EH);
 
     // 写真（ユーザーのズーム/パンを反映して描画）
-    const previewW = storyCanvas.getBoundingClientRect().width;
-    const exportS  = EW / previewW; // preview→export スケール
+    // offsetWidth = CSS 幅（280px）。getBoundingClientRect は transform:scale の
+    // 影響を受けるため使用しない。canvas 内部は常に 280px 基準で描画されている。
+    const previewW = storyCanvas.offsetWidth;
+    const exportS  = EW / previewW; // = 1080 / 280 = 3.857（固定）
+    // land/port は写真比率維持のため常に contain モード
+    const isLandPort = layout.startsWith('layout-land-') || layout.startsWith('layout-port-');
     drawExportPhoto(ctx, canvasPhoto, geo,
       canvasPhoto.style.filter,
-      canvasPhoto.style.objectFit === 'contain',
+      canvasPhoto.style.objectFit === 'contain' || isLandPort,
       photoZoom, photoX * exportS, photoY * exportS);
 
     // パレットストリップ
@@ -1352,9 +1626,17 @@ function exportGeo(layout, W, H) {
     case 'layout-split':   return { x:0,     y:0,                w:W,     h:H*.50, r:0 };
     case 'layout-frame':   return { x:W*.08, y:H*.06,            w:W*.84, h:H*.70, r:5 };
     case 'layout-duo':         return { x:0,     y:0, w:W*.60, h:H,     r:0 };
-    case 'layout-selvedge-h':  return { x:0,     y:0, w:W,     h:H*.80, r:0 };
-    case 'layout-selvedge-v':  return { x:W*.20, y:0, w:W*.80, h:H,     r:0 };
-    default:               return { x:W*.06, y:H*.07,            w:W*.88, h:H*.60, r:5 };
+    case 'layout-selvedge-h':   return { x:0,     y:0,        w:W,     h:H*.80,  r:0 };
+    case 'layout-selvedge-v':   return { x:W*.20, y:0,        w:W*.80, h:H,      r:0 };
+    // Land (3:2): frame height = canvas_width × 2/3 = 9/16 × 2/3 × H = 0.375H
+    case 'layout-land-top':    return { x:0,     y:H*.10,    w:W,     h:H*.375, r:0 };
+    case 'layout-land-center': return { x:W*.08, y:H*.3425,  w:W*.84, h:H*.315, r:5 };
+    case 'layout-land-frame':  return { x:W*.08, y:H*.3425,  w:W*.84, h:H*.315, r:5 };
+    // Port (2:3): frame height = canvas_width × 3/2 × scale
+    case 'layout-port-top':    return { x:W*.14, y:H*.08,    w:W*.72, h:H*.61,  r:5 };
+    case 'layout-port-center': return { x:W*.18, y:H*.23,    w:W*.64, h:H*.54,  r:5 };
+    case 'layout-port-frame':  return { x:W*.08, y:H*.145,   w:W*.84, h:H*.71,  r:5 };
+    default:               return { x:W*.06, y:H*.07,        w:W*.88, h:H*.60,  r:5 };
   }
 }
 
@@ -1401,13 +1683,15 @@ function exportRoundRect(ctx, x, y, w, h, r) {
 }
 
 // テキスト描画（プレビュー 498px 基準からスケール）
+// エクスポート用システムフォント定数
+const EXPORT_SYS = 'system-ui, -apple-system, "Helvetica Neue", "Noto Sans JP", sans-serif';
+
 function exportText(ctx, layout, W, H, tc) {
-  // S: プレビュー高さ(498px)→エクスポート高さへのスケール係数
   const S  = H / 498;
-  const ds = 7 * S, cs = 20 * S, ss = 7 * S;
-  const dStr = document.getElementById('dateLine').textContent;
-  const cStr = document.getElementById('captionDisplay').textContent;
-  const sStr = document.getElementById('subDisplay').textContent;
+  const ds = 7 * S, cs = 18 * S, ss = 7 * S; // cs: 20→18px相当
+  const dStr = textVisibility.date    ? document.getElementById('dateLine').textContent    : '';
+  const cStr = textVisibility.caption ? document.getElementById('captionDisplay').textContent : '';
+  const sStr = textVisibility.sub     ? document.getElementById('subDisplay').textContent  : '';
   ctx.fillStyle = tc;
 
   if (layout === 'layout-selvedge-h' || layout === 'layout-selvedge-v') {
@@ -1415,48 +1699,81 @@ function exportText(ctx, layout, W, H, tc) {
     return;
   }
 
+  // Land/Port layouts: 中央揃えテキスト、frame系はテキストなし
+  if (layout.startsWith('layout-land-') || layout.startsWith('layout-port-')) {
+    if (layout === 'layout-land-frame' || layout === 'layout-port-frame') return;
+    const isLandTop = layout === 'layout-land-top';
+    const isPortTop = layout === 'layout-port-top';
+    let stTop;
+    if (isLandTop)      stTop = H * 0.505;
+    else if (isPortTop) stTop = H * 0.710;
+    else                stTop = H * 0.06;
+    ctx.textAlign = 'center';
+    const cx = W / 2;
+    if (dStr) {
+      ctx.font = `400 ${Math.round(ds)}px ${EXPORT_SYS}`;
+      ctx.globalAlpha = 0.5; ctx.fillText(dStr, cx, stTop + ds * 0.75); ctx.globalAlpha = 1;
+    }
+    if (cStr) {
+      ctx.font = `300 ${Math.round(cs)}px ${EXPORT_SYS}`;
+      ctx.fillText(cStr, cx, stTop + 27 * S);
+    }
+    if (sStr) {
+      ctx.font = `300 ${Math.round(ss)}px ${EXPORT_SYS}`;
+      ctx.globalAlpha = 0.5; ctx.fillText(sStr, cx, stTop + 43.6 * S); ctx.globalAlpha = 1;
+    }
+    ctx.textAlign = 'left';
+    return;
+  }
+
   if (layout === 'layout-duo') {
-    // 縦書き風：90°回転して右カラムに描画
     ctx.save();
     ctx.translate(W * 0.915, H * 0.20);
     ctx.rotate(Math.PI / 2);
-    ctx.font = `300 ${Math.round(ds)}px "DM Sans", sans-serif`;
-    ctx.globalAlpha = 0.5; ctx.fillText(dStr, 0, 0); ctx.globalAlpha = 1;
-    ctx.font = `300 italic ${Math.round(cs)}px "Cormorant Garamond", serif`;
-    ctx.fillText(cStr, ds * 1.4 + 4*S, 0);
-    ctx.font = `300 ${Math.round(ss)}px "DM Sans", sans-serif`;
-    ctx.globalAlpha = 0.5;
-    ctx.fillText(sStr, ds*1.4 + 4*S + cs*1.25 + 5*S, 0);
-    ctx.globalAlpha = 1;
+    if (dStr) {
+      ctx.font = `400 ${Math.round(ds)}px ${EXPORT_SYS}`;
+      ctx.globalAlpha = 0.5; ctx.fillText(dStr, 0, 0); ctx.globalAlpha = 1;
+    }
+    if (cStr) {
+      ctx.font = `300 ${Math.round(cs)}px ${EXPORT_SYS}`;
+      ctx.fillText(cStr, ds * 1.4 + 4*S, 0);
+    }
+    if (sStr) {
+      ctx.font = `300 ${Math.round(ss)}px ${EXPORT_SYS}`;
+      ctx.globalAlpha = 0.5;
+      ctx.fillText(sStr, ds*1.4 + 4*S + cs*1.25 + 5*S, 0);
+      ctx.globalAlpha = 1;
+    }
     ctx.restore();
     return;
   }
 
-  // プレビュー CSS から逆算したテキストブロック上端（プレビュー px → export px）
-  // テキストブロック高さ ≈ 45px（7+4+22+5+7）in 498px canvas
   let stTop;
   switch (layout) {
-    case 'layout-edge':    stTop = 298.8 * S; break; // top:55% + padding:5%
-    case 'layout-palette': stTop = 313.56 * S; break; // bottom:28% → top at (498*.72-45)
-    case 'layout-split':   stTop = 268.92 * S; break; // top:54%
-    case 'layout-frame':   stTop = 438.06 * S; break; // bottom:3% → top at (498*.97-45)
-    default:               stTop = 408.18 * S;         // bottom:9% → top at (498*.91-45)
+    case 'layout-edge':    stTop = 298.8 * S; break;
+    case 'layout-palette': stTop = 313.56 * S; break;
+    case 'layout-split':   stTop = 268.92 * S; break;
+    case 'layout-frame':   stTop = 438.06 * S; break;
+    default:               stTop = 408.18 * S;
   }
 
   const tx = W * 0.06;
-  // 各行のベースライン（ascent ≈ font-size * 0.75）
-  ctx.font = `300 ${Math.round(ds)}px "DM Sans", sans-serif`;
-  ctx.globalAlpha = 0.5;
-  ctx.fillText(dStr, tx, stTop + ds * 0.75);
-  ctx.globalAlpha = 1;
-
-  ctx.font = `300 italic ${Math.round(cs)}px "Cormorant Garamond", serif`;
-  ctx.fillText(cStr, tx, stTop + 27 * S);
-
-  ctx.font = `300 ${Math.round(ss)}px "DM Sans", sans-serif`;
-  ctx.globalAlpha = 0.5;
-  ctx.fillText(sStr, tx, stTop + 43.6 * S);
-  ctx.globalAlpha = 1;
+  if (dStr) {
+    ctx.font = `400 ${Math.round(ds)}px ${EXPORT_SYS}`;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(dStr, tx, stTop + ds * 0.75);
+    ctx.globalAlpha = 1;
+  }
+  if (cStr) {
+    ctx.font = `300 ${Math.round(cs)}px ${EXPORT_SYS}`;
+    ctx.fillText(cStr, tx, stTop + 27 * S);
+  }
+  if (sStr) {
+    ctx.font = `300 ${Math.round(ss)}px ${EXPORT_SYS}`;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(sStr, tx, stTop + 43.6 * S);
+    ctx.globalAlpha = 1;
+  }
 }
 
 // selvedge バンドを Canvas に直接描画（エクスポート用）
@@ -1483,10 +1800,12 @@ function exportSelvedgeBand(ctx, layout, W, H, tc) {
     ctx.font = `300 italic ${Math.round(7*S)}px "Cormorant Garamond", serif`;
     ctx.textAlign = 'left';
     ctx.fillText('tono.', padX, textY);
-    ctx.globalAlpha = 0.6;
-    ctx.font = `300 ${Math.round(6*S)}px "DM Sans", sans-serif`;
-    ctx.textAlign = 'right';
-    ctx.fillText(document.getElementById('dateLine').textContent, W - padX, textY);
+    if (textVisibility.date) {
+      ctx.globalAlpha = 0.6;
+      ctx.font = `400 ${Math.round(6*S)}px ${EXPORT_SYS}`;
+      ctx.textAlign = 'right';
+      ctx.fillText(document.getElementById('dateLine').textContent, W - padX, textY);
+    }
     ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
 
@@ -1523,6 +1842,142 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
+
+// -- BOTTOM SHEET --
+;(function () {
+  let sheetOpen = false;
+
+  function isMob() { return window.innerWidth < 768; }
+
+  // -- canvas サイズ固定（シート開閉に関わらず不変）--
+  // シートは canvas を押し上げず、下から重なるだけ。
+  function fixCanvasSize() {
+    const canvas = document.getElementById('storyCanvas');
+    if (!canvas) return;
+    if (!isMob()) {
+      canvas.style.transform = '';
+      canvas.style.marginBottom = '';
+      canvasScale = 1;
+      return;
+    }
+    const REF_W = 280, REF_H = 498;
+    const hdrH  = (document.querySelector('header') || {offsetHeight: 55}).offsetHeight;
+    const availH = Math.max(80, window.innerHeight - hdrH - 24);
+    const availW = window.innerWidth * 0.90;
+    const scale  = Math.min(availH / REF_H, availW / REF_W, 1);
+    canvasScale  = scale;
+    canvas.style.transformOrigin = 'top center';
+    canvas.style.transform       = `scale(${scale})`;
+    canvas.style.marginBottom    = `-${Math.round(REF_H * (1 - scale))}px`;
+    if (typeof updateSelvedgeDots === 'function') updateSelvedgeDots();
+  }
+
+  // -- シート開閉（2 状態だけ）--
+  function setSheet(open, animate) {
+    const sheet = document.getElementById('bottomSheet');
+    if (!sheet) return;
+    sheetOpen = open;
+    if (!animate) sheet.style.transitionDuration = '0s';
+    sheet.classList.toggle('sheet-open', open);
+    if (!animate) requestAnimationFrame(() => { sheet.style.transitionDuration = ''; });
+  }
+
+  // -- テキスト要素タップ: 選択 → 編集 --
+  function initTextTap() {
+    const map = [
+      { id: 'captionDisplay', inputId: 'captionInput' },
+      { id: 'dateLine',       inputId: 'dateInput'    },
+      { id: 'subDisplay',     inputId: 'subInput'     },
+    ];
+    let selectedId = null;
+
+    function clearSel() {
+      map.forEach(({ id }) => {
+        const e = document.getElementById(id);
+        if (e) e.classList.remove('text-selected');
+      });
+      selectedId = null;
+    }
+
+    function openEdit(inputId) {
+      const tabEl = document.querySelector('.tab[onclick*="\'text\'"]');
+      if (tabEl) switchTab('text', tabEl);
+      setTimeout(() => {
+        const inp = document.getElementById(inputId);
+        if (inp) { inp.focus(); inp.select(); }
+      }, 200);
+    }
+
+    map.forEach(({ id, inputId }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        if (selectedId === id) { clearSel(); openEdit(inputId); return; }
+        clearSel();
+        el.classList.add('text-selected');
+        selectedId = id;
+        setTimeout(() => openEdit(inputId), 220);
+      });
+    });
+
+    const sc = document.getElementById('storyCanvas');
+    if (sc) sc.addEventListener('click', e => {
+      if (!e.target.closest('.story-text')) clearSel();
+    });
+  }
+
+  // -- iOS キーボード表示時にシートを KB の上に逃がす --
+  function initKeyboardHandler() {
+    if (!window.visualViewport) return;
+    window.visualViewport.addEventListener('resize', () => {
+      const sheet = document.getElementById('bottomSheet');
+      if (!sheet || !isMob()) return;
+      const kbH = Math.max(0,
+        window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+      sheet.style.transitionDuration = '0s';
+      sheet.style.bottom = kbH > 100 ? kbH + 'px' : '0px';
+      requestAnimationFrame(() => { sheet.style.transitionDuration = ''; });
+    });
+  }
+
+  function init() {
+    fixCanvasSize();
+    if (!isMob()) return;
+    const sheet  = document.getElementById('bottomSheet');
+    const handle = document.getElementById('sheetHandleWrap');
+    if (!sheet || !handle) return;
+
+    // 初期: 閉じた状態
+    setSheet(false, false);
+
+    // ハンドルタップで開閉
+    handle.addEventListener('click', () => setSheet(!sheetOpen, true));
+
+    // 画面回転等
+    window.addEventListener('resize', () => {
+      if (!isMob()) return;
+      fixCanvasSize();
+    });
+
+    initTextTap();
+    initKeyboardHandler();
+  }
+
+  // 外部 API（tab 切り替え時に閉じていれば開く）
+  window._sheet = {
+    expandIfPeek() {
+      if (!isMob() || sheetOpen) return;
+      setSheet(true, true);
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 
 // ── INIT ──
 renderBgBasePalette();
