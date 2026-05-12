@@ -1524,11 +1524,11 @@ function activatePro() {
 }
 
 
-// ── EXPORT: 自前 Canvas 合成 1080×1920 ──
-// html2canvas の CSS filter 非対応を回避し ctx.filter で直接描画する
+// ── EXPORT: プレビューカードそのものを書き出す ──
 async function exportImage() {
   if (!hasPhoto) { showToast('まず写真を選んでね'); return; }
   const btn = document.getElementById('exportBtn');
+  let restorePreview = null;
   const restoreBtn = () => {
     btn.innerHTML = `Export PNG<span class="free-note">${isPro ? '1080px · no watermark' : 'free version includes tono. watermark'}</span>`;
     btn.disabled = false;
@@ -1537,67 +1537,63 @@ async function exportImage() {
   btn.disabled = true;
 
   try {
+    if (typeof html2canvas !== 'function') {
+      throw new Error('html2canvas is not loaded');
+    }
     await document.fonts.ready;
-    const EW = 1080, EH = 1920;
-    const cv = document.createElement('canvas');
-    cv.width = EW; cv.height = EH;
-    const ctx = cv.getContext('2d');
-
-    // 背景
-    const [r, g, b] = currentBgRgb;
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
-    ctx.fillRect(0, 0, EW, EH);
-
-    const lum = 0.299*r + 0.587*g + 0.114*b;
-    const tc = lum > 140 ? 'rgba(26,24,20,0.85)' : 'rgba(245,242,238,0.85)';
-    const layout = [...storyCanvas.classList].find(c => c.startsWith('layout-')) || 'layout-top';
-    const geo = exportGeo(layout, EW, EH);
-
-    // 写真（ユーザーのズーム/パンを反映して描画）
-    // offsetWidth = CSS 幅（280px）。getBoundingClientRect は transform:scale の
-    // 影響を受けるため使用しない。canvas 内部は常に 280px 基準で描画されている。
-    const previewW = storyCanvas.offsetWidth;
-    const exportS  = EW / previewW; // = 1080 / 280 = 3.857（固定）
-    // land/port は写真比率維持のため常に contain モード
-    const isLandPort = layout.startsWith('layout-land-') || layout.startsWith('layout-port-');
-    drawExportPhoto(ctx, canvasPhoto, geo,
-      canvasPhoto.style.filter,
-      canvasPhoto.style.objectFit === 'contain' || isLandPort,
-      photoZoom, photoX * exportS, photoY * exportS);
-
-    // パレットストリップ
-    if (layout === 'layout-palette' && extractedColors.length) {
-      const cw = EW / extractedColors.length;
-      extractedColors.forEach(([cr,cg,cb], i) => {
-        ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
-        ctx.fillRect(i * cw, EH * 0.75, cw, EH * 0.25);
-      });
+    if (canvasPhoto.decode) {
+      await canvasPhoto.decode().catch(() => {});
     }
 
-    // テキスト
-    exportText(ctx, layout, EW, EH, tc);
+    const prevTransform = storyCanvas.style.transform;
+    const prevTransformOrigin = storyCanvas.style.transformOrigin;
+    const prevMarginBottom = storyCanvas.style.marginBottom;
+    const prevTransition = storyCanvas.style.transition;
+    const prevAnimation = storyCanvas.style.animation;
 
-    // デコライン（palette/duo/selvedge 以外）
-    const isSelvedge = layout.startsWith('layout-selvedge');
-    if (layout !== 'layout-palette' && layout !== 'layout-duo' && !isSelvedge) {
-      ctx.fillStyle = tc; ctx.globalAlpha = 0.25;
-      ctx.fillRect(EW * 0.74, EH * 0.942, EW * 0.20, 2);
-      ctx.globalAlpha = 1;
+    restorePreview = () => {
+      storyCanvas.style.transform = prevTransform;
+      storyCanvas.style.transformOrigin = prevTransformOrigin;
+      storyCanvas.style.marginBottom = prevMarginBottom;
+      storyCanvas.style.transition = prevTransition;
+      storyCanvas.style.animation = prevAnimation;
+    };
+
+    // モバイル表示用の外側 scale だけ外し、カード本体のDOM/CSSをそのまま高解像度化する。
+    storyCanvas.style.transform = 'none';
+    storyCanvas.style.transformOrigin = 'top left';
+    storyCanvas.style.marginBottom = '0';
+    storyCanvas.style.transition = 'none';
+    storyCanvas.style.animation = 'none';
+    storyCanvas.offsetHeight;
+
+    const targetWidth = 1080;
+    const scale = targetWidth / storyCanvas.offsetWidth;
+    const captureOptions = {
+      backgroundColor: null,
+      scale,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: storyCanvas.offsetWidth,
+      height: storyCanvas.offsetHeight,
+      windowWidth: document.documentElement.clientWidth,
+      windowHeight: document.documentElement.clientHeight
+    };
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    let cv = await html2canvas(storyCanvas, captureOptions);
+    if (isBlankExport(cv)) {
+      cv = await capturePreviewClone(scale);
     }
 
-    // 透かし（selvedge はバンドに tono. が入るため除外）
-    if (!isPro && !isSelvedge) {
-      ctx.save();
-      ctx.font = `300 italic ${Math.round(EH * 0.013)}px "Cormorant Garamond", serif`;
-      ctx.fillStyle = tc; ctx.globalAlpha = 0.3; ctx.textAlign = 'right';
-      const wmX = layout === 'layout-duo' ? EW * 0.57 : EW * 0.94;
-      const wmY = layout === 'layout-palette' ? EH * 0.735 : EH * 0.963;
-      ctx.fillText('tono.', wmX, wmY);
-      ctx.restore();
-    }
+    restorePreview();
+    restorePreview = null;
 
     // ダウンロード
-    cv.toBlob(blob => {
+    const blob = await new Promise(resolve => cv.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('PNG blob was not created');
+
+    {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = 'tono-story.png';
@@ -1606,12 +1602,67 @@ async function exportImage() {
       URL.revokeObjectURL(url);
       restoreBtn();
       showToast(isPro ? 'exported!' : 'exported with watermark');
-    }, 'image/png');
+    }
 
   } catch (err) {
     console.error(err);
+    if (restorePreview) restorePreview();
     restoreBtn();
     showToast('エクスポートに失敗しました');
+  }
+}
+
+function isBlankExport(cv) {
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return false;
+  const w = cv.width, h = cv.height;
+  let sample;
+  try {
+    sample = ctx.getImageData(0, 0, w, h).data;
+  } catch (err) {
+    return false;
+  }
+  let min = 255, max = 0;
+  const step = Math.max(4, Math.floor(sample.length / 4000 / 4) * 4);
+  for (let i = 0; i < sample.length; i += step) {
+    const lum = 0.299 * sample[i] + 0.587 * sample[i + 1] + 0.114 * sample[i + 2];
+    min = Math.min(min, lum);
+    max = Math.max(max, lum);
+    if (max - min > 18) return false;
+  }
+  return true;
+}
+
+async function capturePreviewClone(scale) {
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:0;top:0;z-index:-1;pointer-events:none;padding:0;background:transparent;';
+  const clone = storyCanvas.cloneNode(true);
+  clone.id = 'storyCanvasExportClone';
+  clone.style.transform = 'none';
+  clone.style.transformOrigin = 'top left';
+  clone.style.marginBottom = '0';
+  clone.style.transition = 'none';
+  clone.style.animation = 'none';
+  clone.querySelectorAll('[id]').forEach(el => {
+    el.id = el.id + 'ExportClone';
+  });
+  host.appendChild(clone);
+  document.body.appendChild(host);
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  try {
+    return await html2canvas(clone, {
+      backgroundColor: null,
+      scale,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: storyCanvas.offsetWidth,
+      height: storyCanvas.offsetHeight,
+      windowWidth: document.documentElement.clientWidth,
+      windowHeight: document.documentElement.clientHeight
+    });
+  } finally {
+    host.remove();
   }
 }
 
