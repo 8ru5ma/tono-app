@@ -150,7 +150,7 @@ header {
   position: absolute; top: 7%; left: 6%; right: 6%; height: 60%; border-radius: 3px; overflow: hidden;
 }
 .story-canvas.layout-center .photo-frame {
-  position: absolute; top: 50%; left: 6%; right: 6%; transform: translateY(-58%); height: 55%; border-radius: 3px; overflow: hidden;
+  position: absolute; top: 18.1%; left: 6%; right: 6%; height: 55%; border-radius: 3px; overflow: hidden;
 }
 .story-canvas.layout-film .photo-frame {
   position: absolute; top: 9%; left: 10%; right: 10%; height: 62%; border-radius: 2px; overflow: hidden;
@@ -840,9 +840,8 @@ input[type=range]::-webkit-slider-thumb {
 .story-canvas.layout-frame .story-text { bottom: 3%; }
 
 .story-canvas.layout-circle .photo-frame {
-  position: absolute; top: 12%; left: 50%;
+  position: absolute; top: 12%; left: 14%;
   width: 72%; aspect-ratio: 1; height: auto;
-  transform: translateX(-50%);
   border-radius: 50%; overflow: hidden;
   box-shadow: 0 18px 42px rgba(0,0,0,0.14);
 }
@@ -855,21 +854,18 @@ input[type=range]::-webkit-slider-thumb {
   position: absolute; top: 8%; left: 8%; right: 8%; height: 62%;
   border-radius: 48% 52% 43% 57% / 45% 40% 60% 55%;
   overflow: hidden;
-  transform: rotate(-2deg);
   box-shadow: 0 18px 46px rgba(0,0,0,0.16);
 }
 .story-canvas.layout-organic-2 .photo-frame {
   position: absolute; top: 9%; left: 8%; right: 8%; height: 62%;
   border-radius: 55% 45% 50% 50% / 42% 56% 44% 58%;
   overflow: hidden;
-  transform: rotate(1.6deg);
   box-shadow: 0 18px 46px rgba(0,0,0,0.16);
 }
 .story-canvas.layout-organic-3 .photo-frame {
   position: absolute; top: 8%; left: 9%; right: 7%; height: 62%;
   border-radius: 44% 56% 55% 45% / 55% 43% 57% 45%;
   overflow: hidden;
-  transform: rotate(-0.8deg);
   box-shadow: 0 18px 46px rgba(0,0,0,0.16);
 }
 .story-canvas.layout-organic .story-text {
@@ -1008,14 +1004,14 @@ input[type=range]::-webkit-slider-thumb {
 .story-canvas.layout-land-top .story-text { bottom: 6%; left: 0; right: 0; text-align: center; }
 
 .story-canvas.layout-land-center .photo-frame {
-  position: absolute; top: 50%; left: 8%; right: 8%;
-  transform: translateY(-50%); height: 31.5%; border-radius: 3px; overflow: hidden;
+  position: absolute; top: 34.25%; left: 8%; right: 8%;
+  height: 31.5%; border-radius: 3px; overflow: hidden;
 }
 .story-canvas.layout-land-center .story-text { top: 7%; bottom: auto; left: 0; right: 0; text-align: center; }
 
 .story-canvas.layout-land-frame .photo-frame {
-  position: absolute; top: 50%; left: 8%; right: 8%;
-  transform: translateY(-50%); height: 31.5%; border-radius: 3px; overflow: hidden;
+  position: absolute; top: 34.25%; left: 8%; right: 8%;
+  height: 31.5%; border-radius: 3px; overflow: hidden;
 }
 .story-canvas.layout-land-frame .story-text,
 .story-canvas.layout-land-frame .deco-line { display: none; }
@@ -1028,14 +1024,14 @@ input[type=range]::-webkit-slider-thumb {
 .story-canvas.layout-port-top .story-text { bottom: 5%; left: 0; right: 0; text-align: center; }
 
 .story-canvas.layout-port-center .photo-frame {
-  position: absolute; top: 50%; left: 18%; right: 18%;
-  transform: translateY(-50%); height: 54%; border-radius: 3px; overflow: hidden;
+  position: absolute; top: 23%; left: 18%; right: 18%;
+  height: 54%; border-radius: 3px; overflow: hidden;
 }
 .story-canvas.layout-port-center .story-text { top: 5%; bottom: auto; left: 0; right: 0; text-align: center; }
 
 .story-canvas.layout-port-frame .photo-frame {
-  position: absolute; top: 50%; left: 8%; right: 8%;
-  transform: translateY(-50%); height: 71%; border-radius: 3px; overflow: hidden;
+  position: absolute; top: 14.5%; left: 8%; right: 8%;
+  height: 71%; border-radius: 3px; overflow: hidden;
 }
 .story-canvas.layout-port-frame .story-text,
 .story-canvas.layout-port-frame .deco-line { display: none; }
@@ -1571,9 +1567,6 @@ function onRotateSlider(v) {
 }
 
 function getFrameRotation(el) {
-  if (el.classList.contains('layout-organic-2')) return 1.6;
-  if (el.classList.contains('layout-organic-3')) return -0.8;
-  if (el.classList.contains('layout-organic')) return -2;
   return 0;
 }
 
@@ -1994,7 +1987,17 @@ function installExportPhotoCanvas() {
   const photoCv = document.createElement('canvas');
   photoCv.width = Math.round(frameW * dpr);
   photoCv.height = Math.round(frameH * dpr);
-  photoCv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
+  const frameStyle = getComputedStyle(photoFrame);
+  photoCv.style.cssText = [
+    'position:absolute',
+    'inset:0',
+    'width:100%',
+    'height:100%',
+    'display:block',
+    'overflow:hidden',
+    `border-radius:${frameStyle.borderRadius}`,
+    `clip-path:inset(0 round ${frameStyle.borderRadius})`
+  ].join(';');
 
   const ctx = photoCv.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2004,6 +2007,8 @@ function installExportPhotoCanvas() {
     ctx.filter = canvasPhoto.style.filter;
   }
 
+  // The preview uses object-fit: contain on the image element, then applies pan,
+  // zoom, and optional rotation around the frame center. Mirror that exactly.
   const imageRatio = canvasPhoto.naturalWidth / canvasPhoto.naturalHeight;
   const frameRatio = frameW / frameH;
   let drawW, drawH;
@@ -2015,18 +2020,15 @@ function installExportPhotoCanvas() {
     drawW = frameH * imageRatio;
   }
 
-  ctx.translate(frameW / 2 + photoX, frameH / 2 + photoY);
+  const visualRotation = photoRotation - getFrameRotation(storyCanvas);
+  ctx.translate(frameW / 2, frameH / 2);
+  if (visualRotation) ctx.rotate(visualRotation * Math.PI / 180);
+  ctx.translate(photoX, photoY);
   ctx.scale(photoZoom, photoZoom);
   ctx.drawImage(canvasPhoto, -drawW / 2, -drawH / 2, drawW, drawH);
 
   const prevDisplay = canvasPhoto.style.display;
   const prevVisibility = canvasPhoto.style.visibility;
-  const frameRotation = getFrameRotation(storyCanvas);
-  const visualRotation = photoRotation - frameRotation;
-  if (visualRotation) {
-    photoCv.style.transform = `rotate(${visualRotation}deg)`;
-    photoCv.style.transformOrigin = 'center center';
-  }
   canvasPhoto.style.visibility = 'hidden';
   photoFrame.appendChild(photoCv);
 
@@ -2469,7 +2471,7 @@ updateSelvedgeDots();
 
 // ── PWA SERVICE WORKER ──
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js?v=7').then(reg => reg.update()).catch(() => {});
 }
 </script>
 </body>
