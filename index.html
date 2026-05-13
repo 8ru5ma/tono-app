@@ -86,6 +86,26 @@ header {
   display: none;
 }
 .pro-tag.visible { display: block; }
+.pro-upsell-copy { display: none; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.about-btn {
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 10px;
+  font-family: var(--sys);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.about-btn:active { opacity: 0.55; }
 
 /* ───── APP SHELL ───── */
 .app-shell {
@@ -147,8 +167,25 @@ header {
 
 .photo-placeholder {
   width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 9px; letter-spacing: 0.12em; color: rgba(255,255,255,0.2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px;
+  text-align: center;
+  font-family: var(--sys);
+  color: rgba(26,24,20,0.45);
+  border: 1px dashed rgba(26,24,20,0.14);
+  border-radius: inherit;
+  background: rgba(26,24,20,0.018);
+}
+.photo-placeholder .ph-main {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.photo-placeholder .ph-sub {
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  opacity: 0.62;
 }
 
 .story-text {
@@ -262,21 +299,21 @@ header {
 }
 .tab.active { color: var(--text); border-color: var(--text); }
 
-.tab-panel { display: none; padding: 20px 20px 0; }
+.tab-panel { display: none; padding: 16px 16px 0; }
 .tab-panel.active { display: block; }
 
 /* PHOTO TAB */
 .drop-zone {
-  min-height: 52px;
+  min-height: 44px;
   border: 1px solid rgba(0,0,0,0.10);
   border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer; position: relative; overflow: hidden;
   transition: all 0.2s;
   background: rgba(255,255,255,0.20);
-  padding: 8px;
+  padding: 6px;
 }
 .drop-zone:active { transform: scale(0.99); }
 .drop-zone.drag-over {
@@ -286,14 +323,14 @@ header {
 .drop-zone input { display: none; }
 .choose-photo-btn {
   flex-shrink: 0;
-  height: 34px;
-  padding: 0 14px;
+  height: 30px;
+  padding: 0 12px;
   border: none;
   border-radius: 3px;
   background: var(--text);
   color: var(--bg);
   font-family: var(--sys);
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.10em;
   text-transform: uppercase;
   cursor: pointer;
@@ -302,17 +339,17 @@ header {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 .photo-file-name {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .photo-file-hint {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--muted);
   opacity: 0.65;
   letter-spacing: 0.06em;
@@ -320,12 +357,12 @@ header {
 .desktop-drop-hint { display: none; }
 
 .panel-label {
-  font-size: 10px; letter-spacing: 0.12em;
+  font-size: 9px; letter-spacing: 0.12em;
   color: var(--muted); text-transform: uppercase;
-  margin: 20px 0 10px;
+  margin: 14px 0 8px;
 }
 
-.palette-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.palette-row { display: flex; gap: 7px; flex-wrap: wrap; }
 
 .swatch {
   width: 32px; height: 32px; border-radius: 50%;
@@ -341,19 +378,19 @@ header {
   border: 1.5px dashed rgba(0,0,0,0.15);
 }
 
-.slider-group { margin-bottom: 16px; }
+.slider-group { margin-bottom: 12px; }
 .slider-row {
   display: flex; justify-content: space-between;
-  font-size: 10px; color: var(--muted); letter-spacing: 0.08em;
-  margin-bottom: 6px;
+  font-size: 8px; color: var(--muted); letter-spacing: 0.06em;
+  margin-bottom: 3px;
 }
 input[type=range] {
-  width: 100%; height: 2px; appearance: none;
+  width: 100%; height: 1px; appearance: none;
   background: linear-gradient(to right, #8c7b6b, #e8ddd0);
   border-radius: 2px; outline: none;
 }
 input[type=range]::-webkit-slider-thumb {
-  appearance: none; width: 16px; height: 16px;
+  appearance: none; width: 14px; height: 14px;
   border-radius: 50%; background: var(--text); cursor: pointer;
 }
 
@@ -415,7 +452,7 @@ input[type=range]::-webkit-slider-thumb {
 
 /* EXPORT */
 .export-area {
-  padding: 10px 16px calc(10px + var(--safe-bottom));
+  padding: 8px 16px calc(8px + var(--safe-bottom));
   border-top: 1px solid rgba(0,0,0,0.06);
   flex-shrink: 0;
   background: var(--bg);
@@ -424,11 +461,11 @@ input[type=range]::-webkit-slider-thumb {
 
 .export-btn {
   width: 100%;
-  height: 52px;
+  height: 44px;
   background: var(--text); color: var(--bg);
   border: none; border-radius: 3px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 11px; letter-spacing: 0.14em;
+  font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; cursor: pointer;
   transition: all 0.2s; font-weight: 400;
   position: relative;
@@ -437,9 +474,9 @@ input[type=range]::-webkit-slider-thumb {
 }
 .export-btn:active { transform: scale(0.98); }
 .export-btn .free-note {
-  display: block; font-size: 9px;
+  display: block; font-size: 8px;
   opacity: 0.5; letter-spacing: 0.08em;
-  margin-top: 3px; text-transform: none;
+  margin-top: 1px; text-transform: none;
 }
 
 /* ── PRO MODAL ── */
@@ -514,6 +551,32 @@ input[type=range]::-webkit-slider-thumb {
   font-size: 12px; color: var(--muted); letter-spacing: 0.06em;
   cursor: pointer;
 }
+.about-list {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0 24px;
+}
+.about-item {
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding-bottom: 14px;
+}
+.about-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.about-kicker {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.about-text {
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(26,24,20,0.72);
+  font-weight: 300;
+}
 
 /* canvas 内のテキストはタップして編集できることを示す */
 .story-text .s-main,
@@ -583,7 +646,7 @@ input[type=range]::-webkit-slider-thumb {
   /* エクスポートボタン */
   .bottom-sheet .export-area {
     flex-shrink: 0;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
     background: var(--bg);
     border-top: 1px solid rgba(0,0,0,0.06);
   }
@@ -639,11 +702,11 @@ input[type=range]::-webkit-slider-thumb {
     position: sticky; bottom: 0;
     background: var(--bg);
     border-top: 1px solid rgba(0,0,0,0.06);
-    max-width: 480px; padding: 20px;
+    max-width: 480px; padding: 16px 20px;
   }
 
   .export-btn {
-    height: auto; padding: 14px;
+    height: auto; padding: 12px;
     display: block;
   }
 
@@ -668,7 +731,7 @@ input[type=range]::-webkit-slider-thumb {
 
 /* ── BACKGROUND SWATCHES ── */
 .bg-swatch {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   cursor: pointer; border: 2px solid transparent;
   transition: all 0.2s; flex-shrink: 0;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
@@ -677,14 +740,14 @@ input[type=range]::-webkit-slider-thumb {
 }
 .bg-swatch::after {
   content: ''; position: absolute;
-  inset: -4px; border-radius: 50%;
+  inset: -5px; border-radius: 50%;
 }
 .bg-swatch.active {
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text), inset 0 0 0 1px rgba(0,0,0,0.1);
 }
 .from-photo-label {
-  font-size: 9px; letter-spacing: 0.14em;
-  color: var(--muted); margin: 10px 0 6px; display: block;
+  font-size: 8px; letter-spacing: 0.14em;
+  color: var(--muted); margin: 8px 0 5px; display: block;
 }
 
 .control-help {
@@ -1031,8 +1094,11 @@ input[type=range]::-webkit-slider-thumb {
 
 <header>
   <div class="logo">to<em>n</em>o.</div>
-  <button class="pro-badge visible" id="proBtn" onclick="openModal()">upgrade to pro</button>
-  <div class="pro-tag" id="proTag">pro</div>
+  <div class="header-actions">
+    <button class="about-btn" onclick="openAbout()">about</button>
+    <button class="pro-badge" id="proBtn" onclick="openModal()">upgrade to pro</button>
+    <div class="pro-tag" id="proTag">pro</div>
+  </div>
 </header>
 
 <div class="app-shell">
@@ -1042,12 +1108,15 @@ input[type=range]::-webkit-slider-thumb {
     <div class="story-canvas layout-top" id="storyCanvas">
       <div class="photo-frame" id="photoFrame">
         <img id="canvasPhoto" src="" alt="" style="display:none">
-        <div class="photo-placeholder" id="noPhoto">your photo here</div>
+        <div class="photo-placeholder" id="noPhoto">
+          <div class="ph-main">choose photo</div>
+          <div class="ph-sub">start from the panel below</div>
+        </div>
       </div>
       <div class="story-text" id="storyText">
         <div class="s-date" id="dateLine">— 2026</div>
-        <div class="s-main" id="captionDisplay">a quiet moment</div>
-        <div class="s-sub" id="subDisplay">somewhere beautiful</div>
+        <div class="s-main" id="captionDisplay">untitled</div>
+        <div class="s-sub" id="subDisplay">photo archive</div>
       </div>
       <div class="deco-line" id="decoLine"></div>
       <div class="watermark" id="watermark">tono.</div>
@@ -1140,10 +1209,16 @@ input[type=range]::-webkit-slider-thumb {
         <input type="range" id="toneSlider" min="-50" max="50" value="0">
       </div>
 
+      <p class="panel-label">Brightness</p>
+      <div class="slider-group">
+        <div class="slider-row"><span>dark</span><span>bright</span></div>
+        <input type="range" id="brightnessSlider" min="-40" max="40" value="0">
+      </div>
+
       <p class="panel-label">Fade</p>
       <div class="slider-group">
-        <div class="slider-row"><span>vivid</span><span>matte</span></div>
-        <input type="range" id="fadeSlider" min="0" max="60" value="15">
+        <div class="slider-row"><span>vivid</span><span>mono</span></div>
+        <input type="range" id="fadeSlider" min="0" max="100" value="15">
       </div>
     </div>
 
@@ -1256,7 +1331,7 @@ input[type=range]::-webkit-slider-thumb {
           <span class="thumb-name">port-f</span><span class="ratio-badge">2:3</span>
         </div>
       </div>
-      <p style="font-size:11px;color:var(--muted);margin-top:16px;letter-spacing:0.04em;line-height:1.6;">
+      <p class="pro-upsell-copy" style="font-size:11px;color:var(--muted);margin-top:16px;letter-spacing:0.04em;line-height:1.6;">
         Pro unlocks film, edge &amp; palette layouts, removes watermark, and enables 1080px export.
       </p>
     </div>
@@ -1269,7 +1344,7 @@ input[type=range]::-webkit-slider-thumb {
           <button class="text-toggle" id="toggle-caption" onclick="toggleTextItem('caption',this)">ON</button>
         </div>
         <input class="text-input caption-input" id="captionInput" type="text"
-          placeholder="a quiet moment" maxlength="40" autocomplete="off">
+          placeholder="untitled" maxlength="40" autocomplete="off">
       </div>
       <div class="input-group">
         <div class="text-toggle-row">
@@ -1277,7 +1352,7 @@ input[type=range]::-webkit-slider-thumb {
           <button class="text-toggle" id="toggle-sub" onclick="toggleTextItem('sub',this)">ON</button>
         </div>
         <input class="text-input" id="subInput" type="text"
-          placeholder="somewhere beautiful" maxlength="40" autocomplete="off">
+          placeholder="photo archive" maxlength="40" autocomplete="off">
       </div>
       <div class="input-group">
         <div class="text-toggle-row">
@@ -1323,6 +1398,32 @@ input[type=range]::-webkit-slider-thumb {
 
     <button class="modal-cta" onclick="activatePro()">start for free — 7 days trial</button>
     <button class="modal-close" onclick="closeModal()">maybe later</button>
+  </div>
+</div>
+
+<!-- ABOUT MODAL -->
+<div class="modal-overlay" id="aboutModal" onclick="closeAboutIfBg(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">about tono.</div>
+    <div class="modal-sub">a small story image maker for your photos.</div>
+
+    <div class="about-list">
+      <div class="about-item">
+        <div class="about-kicker">how to use</div>
+        <div class="about-text">Choose a photo, adjust the crop, color, layout, and text, then export the card as a PNG.</div>
+      </div>
+      <div class="about-item">
+        <div class="about-kicker">privacy</div>
+        <div class="about-text">Your photo is edited inside this browser. It is not uploaded, saved to a database, or sent to a server by this app.</div>
+      </div>
+      <div class="about-item">
+        <div class="about-kicker">image use</div>
+        <div class="about-text">You can use exported images freely, but please use photos and materials you have the right to use. You are responsible for the content you upload and publish.</div>
+      </div>
+    </div>
+
+    <button class="modal-close" onclick="closeAbout()">close</button>
   </div>
 </div>
 
@@ -1375,6 +1476,7 @@ const paletteRow = document.getElementById('paletteRow');
 const rotateSlider = document.getElementById('rotateSlider');
 const rotateValue = document.getElementById('rotateValue');
 const toneSlider = document.getElementById('toneSlider');
+const brightnessSlider = document.getElementById('brightnessSlider');
 const fadeSlider = document.getElementById('fadeSlider');
 const storyText = document.getElementById('storyText');
 const decoLine = document.getElementById('decoLine');
@@ -1713,11 +1815,16 @@ function updatePaletteStrip(colors) {
 function applyFilter() {
   if (!hasPhoto) return;
   const tone = parseInt(toneSlider.value);
+  const brightness = parseInt(brightnessSlider.value);
   const fade = parseInt(fadeSlider.value);
-  canvasPhoto.style.filter = `hue-rotate(${tone*0.5}deg) saturate(${Math.max(0.3,1-fade/100)}) brightness(${1+fade*0.002}) contrast(${Math.max(0.7,1-fade*0.006)}) sepia(${fade*0.008})`;
+  const saturation = Math.max(0, 1 - fade / 100);
+  const contrast = Math.max(0.55, 1 - fade * 0.004);
+  const warmth = Math.max(0, (100 - fade) / 100);
+  canvasPhoto.style.filter = `hue-rotate(${tone*0.5*warmth}deg) saturate(${saturation}) brightness(${Math.max(0.4, 1 + brightness / 100 + fade * 0.0015)}) contrast(${contrast}) sepia(${fade*0.004*warmth})`;
 }
 
 toneSlider.addEventListener('input', applyFilter);
+brightnessSlider.addEventListener('input', applyFilter);
 fadeSlider.addEventListener('input', applyFilter);
 
 // ── LAYOUT ──
@@ -1735,10 +1842,10 @@ function setLayout(el) {
 
 // ── TEXT ──
 document.getElementById('captionInput').addEventListener('input', e => {
-  document.getElementById('captionDisplay').textContent = e.target.value || 'a quiet moment';
+  document.getElementById('captionDisplay').textContent = e.target.value || 'untitled';
 });
 document.getElementById('subInput').addEventListener('input', e => {
-  document.getElementById('subDisplay').textContent = e.target.value || 'somewhere beautiful';
+  document.getElementById('subDisplay').textContent = e.target.value || 'photo archive';
 });
 document.getElementById('dateInput').addEventListener('input', e => {
   const val = e.target.value || '— 2026';
@@ -1756,6 +1863,15 @@ function closeModal() {
 }
 function closeModalIfBg(e) {
   if (e.target === document.getElementById('proModal')) closeModal();
+}
+function openAbout() {
+  document.getElementById('aboutModal').classList.add('open');
+}
+function closeAbout() {
+  document.getElementById('aboutModal').classList.remove('open');
+}
+function closeAboutIfBg(e) {
+  if (e.target === document.getElementById('aboutModal')) closeAbout();
 }
 function activatePro() {
   isPro = true;
@@ -2316,8 +2432,8 @@ function showToast(msg) {
     const handle = document.getElementById('sheetHandleWrap');
     if (!sheet || !handle) return;
 
-    // 初期: 閉じた状態
-    setSheet(false, false);
+    // 初期: 写真選択から始めやすいように開いた状態
+    setSheet(true, false);
 
     // ハンドルタップで開閉
     handle.addEventListener('click', () => setSheet(!sheetOpen, true));

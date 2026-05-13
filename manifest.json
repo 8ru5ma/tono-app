@@ -1,7 +1,7 @@
 {
   "name": "tono. story maker",
   "short_name": "tono.",
-  "description": "minimalist story maker — drop a photo, get a story",
+  "description": "minimalist story maker - drop a photo, get a story",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#f5f2ee",
@@ -11,12 +11,14 @@
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

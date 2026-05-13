@@ -1,8 +1,10 @@
-const CACHE = 'tono-v1';
+const CACHE = 'tono-v2';
 const ASSETS = [
   '/index.html',
   '/manifest.json',
-  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap'
+  '/icon-192.png',
+  '/icon-512.png',
+  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap'
 ];
 
 self.addEventListener('install', e => {
